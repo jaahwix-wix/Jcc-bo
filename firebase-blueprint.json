@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with role-based access privileges for school management",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique user ID" },
+        "email": { "type": "string", "description": "User email address" },
+        "displayName": { "type": "string", "description": "Full name of the user" },
+        "role": { 
+          "type": "string", 
+          "description": "System role determining permissions and privileges",
+          "enum": ["admin", "teacher", "bursar", "transport", "student_parent"]
+        },
+        "photoURL": { "type": "string", "description": "Profile picture URL" },
+        "createdAt": { "type": "string", "description": "Creation ISO timestamp" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "StudentEntity": {
+      "title": "StudentEntity",
+      "description": "Student primary biodata and academic enrollment record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique student identifier" },
+        "admissionNumber": { "type": "string", "description": "Official admission ID code" },
+        "name": { "type": "string", "description": "Student full name" },
+        "currentClass": { "type": "string", "description": "Current grade or class level" },
+        "gender": { "type": "string", "description": "Gender identity" },
+        "status": { "type": "string", "description": "Active or Inactive enrollment status" }
+      },
+      "required": ["id", "admissionNumber", "name", "currentClass"]
+    },
+    "AcademicRecordEntity": {
+      "title": "AcademicRecordEntity",
+      "description": "Terminal academic continuous assessment marks and conduct remarks",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Referenced student ID" },
+        "academicYear": { "type": "string", "description": "Academic calendar year" }
+      },
+      "required": ["studentId", "academicYear"]
+    },
+    "FeeLedgerEntity": {
+      "title": "FeeLedgerEntity",
+      "description": "Tuition fees accounting ledger with term balances and payments",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "description": "Referenced student ID" },
+        "academicYear": { "type": "string", "description": "Academic calendar year" }
+      },
+      "required": ["studentId", "academicYear"]
+    },
+    "ExamPrepEntity": {
+      "title": "ExamPrepEntity",
+      "description": "National examination candidate registration and mock performance",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique exam prep record ID" },
+        "studentId": { "type": "string", "description": "Referenced student ID" },
+        "examType": { "type": "string", "description": "NPSE, BECE, or WASSCE" }
+      },
+      "required": ["id", "studentId", "examType"]
+    },
+    "TeacherEntity": {
+      "title": "TeacherEntity",
+      "description": "Faculty staff profile and curriculum assignments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique teacher ID" },
+        "name": { "type": "string", "description": "Faculty member full name" },
+        "role": { "type": "string", "description": "Academic title or specialization" }
+      },
+      "required": ["id", "name"]
+    },
+    "ReferenceSnapshotEntity": {
+      "title": "ReferenceSnapshotEntity",
+      "description": "Archived snapshot of school operational records for permanent historical audit and reference uses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique snapshot archive ID" },
+        "title": { "type": "string", "description": "Descriptive reference label or title" },
+        "notes": { "type": "string", "description": "Administrative notes and audit purpose" },
+        "savedAt": { "type": "string", "description": "ISO timestamp when snapshot was archived" },
+        "savedBy": { "type": "string", "description": "Administrator who created the reference archive" }
+      },
+      "required": ["id", "title", "savedAt", "savedBy"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user account information, profile details, and role assignments"
+    },
+    "/admins/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of designated system administrators"
+    },
+    "/students/{studentId}": {
+      "schema": "StudentEntity",
+      "description": "Permanent student records, bio, enrollment, and access credentials"
+    },
+    "/academic_records/{recordId}": {
+      "schema": "AcademicRecordEntity",
+      "description": "Student academic performance, term grades, remarks, and GPA"
+    },
+    "/fee_ledgers/{ledgerId}": {
+      "schema": "FeeLedgerEntity",
+      "description": "Tuition fees, payments, balances, and receipt logs"
+    },
+    "/exam_preps/{prepId}": {
+      "schema": "ExamPrepEntity",
+      "description": "National exam preparation records (NPSE, BECE, WASSCE)"
+    },
+    "/teachers/{teacherId}": {
+      "schema": "TeacherEntity",
+      "description": "Teacher and staff directory, subject assignments, access codes"
+    },
+    "/reference_snapshots/{snapshotId}": {
+      "schema": "ReferenceSnapshotEntity",
+      "description": "Historical audit reference snapshots of school database for institutional archives and reference uses"
+    }
+  }
+}

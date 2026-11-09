@@ -33,7 +33,8 @@ import {
   Sparkles,
   ShieldCheck,
   BookOpen,
-  Paperclip
+  Paperclip,
+  FileCheck
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Student, StudentAcademicRecord, StudentFeeLedger, StudentClass, Lesson } from '../types';
@@ -1253,14 +1254,24 @@ ${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
                       {/* Coursework completion badge & link to main assignments module */}
                       <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                         {onNavigate && (
-                          <button
-                            type="button"
-                            onClick={() => onNavigate('assignments')}
-                            className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-xl border border-teal-200 flex items-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <span>Browse All School Tasks</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('assignments')}
+                              className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-xl border border-teal-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <span>Browse All School Tasks</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('past-papers')}
+                              className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Past Papers (NPSE/BECE/WASSCE)</span>
+                            </button>
+                          </>
                         )}
                         <span className="text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-amber-500" />

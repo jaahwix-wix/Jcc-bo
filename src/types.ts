@@ -147,6 +147,37 @@ export interface RolePrivileges {
   canViewStudentPortal: boolean; // Student/Parent personal academic and fee tracking
   canVerifyStaffAndStudents: boolean; // Strictly restricted: verify staff & student records (Principal/Admin only)
   canViewAssignments?: boolean; // Access assignments module across Nursery 1 to SSS 3 by subject
+  canViewPastPapers?: boolean; // Access NPSE, BECE, WASSCE past examination papers archive
+}
+
+export interface PastPaperQuestion {
+  id: string;
+  number: number;
+  question: string;
+  options?: string[]; // Multiple choice options A, B, C, D
+  correctOption?: number; // Index 0, 1, 2, 3
+  markingGuide?: string; // Step-by-step model solution
+  points: number;
+}
+
+export interface PastPaper {
+  id: string;
+  examType: 'NPSE' | 'BECE' | 'WASSCE';
+  year: number;
+  subject: string;
+  paperCode: string;
+  paperTitle: string;
+  paperType: 'Paper 1 (Objectives)' | 'Paper 2 (Theory & Essay)' | 'Practical & Alternative' | 'Combined';
+  durationMinutes: number;
+  totalMarks: number;
+  instructions: string;
+  questionsCount: number;
+  sampleQuestions?: PastPaperQuestion[];
+  downloadFileName?: string;
+  fileSize?: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  hasMarkingScheme?: boolean;
 }
 
 export interface AuthUser {

@@ -33,7 +33,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  ClipboardList
+  ClipboardList,
+  FileCheck
 } from 'lucide-react';
 import LoginPage from './components/LoginPage';
 import { Student, StudentAcademicRecord, NationalExamPrep, StudentFeeLedger, FeeTransaction } from './types';
@@ -73,6 +74,7 @@ import NoticeManagement from './components/NoticeManagement';
 import ClassManagement from './components/ClassManagement';
 import AttendanceModule from './components/AttendanceModule';
 import AssignmentsModule from './components/AssignmentsModule';
+import PastPapersModule from './components/PastPapersModule';
 import TimetableModule from './components/TimetableModule';
 import InventoryModule from './components/InventoryModule';
 import ReportsModule from './components/ReportsModule';
@@ -166,6 +168,7 @@ export default function App() {
     { id: 'classes', label: 'Class Management', icon: Building2, permission: 'canViewAcademics' as const, moduleName: 'Class Management', requiredDesc: 'Nursery, primary classes, streams and class teachers' },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck, permission: 'canViewAcademics' as const, moduleName: 'Attendance', requiredDesc: 'Daily attendance, absent/late records and attendance reports' },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList, permission: 'canViewAssignments' as const, moduleName: 'Assignments & Homework', requiredDesc: 'Homework and coursework for Nursery 1 to SSS 3 by subject' },
+    { id: 'past-papers', label: 'Past Papers', icon: FileCheck, permission: 'canViewPastPapers' as const, moduleName: 'National Past Papers (NPSE, BECE, WASSCE)', requiredDesc: 'Official NPSE, BECE & WASSCE past exam papers, marking guides and interactive mock tests' },
     { id: 'fees', label: 'Fees Management', icon: CreditCard, permission: 'canViewFinances' as const, moduleName: 'Fees Management', requiredDesc: 'Fee structures, payments, outstanding balances and receipts' },
     { id: 'performance', label: 'Examination & Results', icon: Award, permission: 'canViewAcademics' as const, moduleName: 'Examination & Results', requiredDesc: 'Assessments, exams, grades, positions and report cards' },
     { id: 'timetable', label: 'Timetable', icon: CalendarDays, permission: 'canViewAcademics' as const, moduleName: 'Timetable', requiredDesc: 'Class schedules, subjects and teacher allocation' },
@@ -187,6 +190,7 @@ export default function App() {
     if (currentLink && !can(currentLink.permission)) {
       if (can('canViewDashboard')) setActiveTab('dashboard');
       else if (can('canViewAssignments')) setActiveTab('assignments');
+      else if (can('canViewPastPapers')) setActiveTab('past-papers');
       else if (can('canViewStudentPortal')) setActiveTab('student-portal');
       else if (can('canViewAcademics')) setActiveTab('performance');
       else if (can('canViewFinances')) setActiveTab('fees');
@@ -502,6 +506,7 @@ export default function App() {
   const handleNavigateHome = () => {
     if (can('canViewDashboard')) setActiveTab('dashboard');
     else if (can('canViewAssignments')) setActiveTab('assignments');
+    else if (can('canViewPastPapers')) setActiveTab('past-papers');
     else if (can('canViewStudentPortal')) setActiveTab('student-portal');
     else if (can('canViewAcademics')) setActiveTab('performance');
     else if (can('canViewFinances')) setActiveTab('fees');
@@ -966,6 +971,13 @@ export default function App() {
                 {activeTab === 'assignments' && (
                   <AssignmentsModule 
                     students={students}
+                    onNavigate={handleNavigate}
+                  />
+                )}
+
+                {/* 14c. National Past Papers (NPSE, BECE, WASSCE) */}
+                {activeTab === 'past-papers' && (
+                  <PastPapersModule 
                     onNavigate={handleNavigate}
                   />
                 )}

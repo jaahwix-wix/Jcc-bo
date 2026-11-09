@@ -77,6 +77,7 @@ export const ROLE_PRIVILEGES_MAP: Record<UserRole, RolePrivileges> = {
     canViewStudentPortal: true,
     canVerifyStaffAndStudents: true, // Only administrator
     canViewAssignments: true,
+    canViewPastPapers: true,
   },
   teacher: {
     role: 'teacher',
@@ -100,6 +101,7 @@ export const ROLE_PRIVILEGES_MAP: Record<UserRole, RolePrivileges> = {
     canViewStudentPortal: false,
     canVerifyStaffAndStudents: false, // Restricted
     canViewAssignments: true,
+    canViewPastPapers: true,
   },
   bursar: {
     role: 'bursar',
@@ -123,6 +125,7 @@ export const ROLE_PRIVILEGES_MAP: Record<UserRole, RolePrivileges> = {
     canViewStudentPortal: false,
     canVerifyStaffAndStudents: false, // Restricted
     canViewAssignments: false,
+    canViewPastPapers: true,
   },
   transport: {
     role: 'transport',
@@ -146,6 +149,7 @@ export const ROLE_PRIVILEGES_MAP: Record<UserRole, RolePrivileges> = {
     canViewStudentPortal: false,
     canVerifyStaffAndStudents: false, // Restricted
     canViewAssignments: false,
+    canViewPastPapers: true,
   },
   student_parent: {
     role: 'student_parent',
@@ -169,6 +173,7 @@ export const ROLE_PRIVILEGES_MAP: Record<UserRole, RolePrivileges> = {
     canViewStudentPortal: true,
     canVerifyStaffAndStudents: false, // Restricted
     canViewAssignments: true,
+    canViewPastPapers: true,
   },
 };
 

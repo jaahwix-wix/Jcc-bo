@@ -32,7 +32,8 @@ import {
   PanelLeft,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  ClipboardList
 } from 'lucide-react';
 import LoginPage from './components/LoginPage';
 import { Student, StudentAcademicRecord, NationalExamPrep, StudentFeeLedger, FeeTransaction } from './types';
@@ -71,6 +72,7 @@ import IdCardCenter from './components/IdCardCenter';
 import NoticeManagement from './components/NoticeManagement';
 import ClassManagement from './components/ClassManagement';
 import AttendanceModule from './components/AttendanceModule';
+import AssignmentsModule from './components/AssignmentsModule';
 import TimetableModule from './components/TimetableModule';
 import InventoryModule from './components/InventoryModule';
 import ReportsModule from './components/ReportsModule';
@@ -163,6 +165,7 @@ export default function App() {
     { id: 'staff-management', label: 'Staff Management', icon: Briefcase, permission: 'canManageStaff' as const, moduleName: 'Staff Management', requiredDesc: 'Teacher profiles, employment records, roles and assignments' },
     { id: 'classes', label: 'Class Management', icon: Building2, permission: 'canViewAcademics' as const, moduleName: 'Class Management', requiredDesc: 'Nursery, primary classes, streams and class teachers' },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck, permission: 'canViewAcademics' as const, moduleName: 'Attendance', requiredDesc: 'Daily attendance, absent/late records and attendance reports' },
+    { id: 'assignments', label: 'Assignments', icon: ClipboardList, permission: 'canViewAssignments' as const, moduleName: 'Assignments & Homework', requiredDesc: 'Homework and coursework for Nursery 1 to SSS 3 by subject' },
     { id: 'fees', label: 'Fees Management', icon: CreditCard, permission: 'canViewFinances' as const, moduleName: 'Fees Management', requiredDesc: 'Fee structures, payments, outstanding balances and receipts' },
     { id: 'performance', label: 'Examination & Results', icon: Award, permission: 'canViewAcademics' as const, moduleName: 'Examination & Results', requiredDesc: 'Assessments, exams, grades, positions and report cards' },
     { id: 'timetable', label: 'Timetable', icon: CalendarDays, permission: 'canViewAcademics' as const, moduleName: 'Timetable', requiredDesc: 'Class schedules, subjects and teacher allocation' },
@@ -183,6 +186,7 @@ export default function App() {
     const currentLink = NAV_LINKS.find(n => n.id === activeTab);
     if (currentLink && !can(currentLink.permission)) {
       if (can('canViewDashboard')) setActiveTab('dashboard');
+      else if (can('canViewAssignments')) setActiveTab('assignments');
       else if (can('canViewStudentPortal')) setActiveTab('student-portal');
       else if (can('canViewAcademics')) setActiveTab('performance');
       else if (can('canViewFinances')) setActiveTab('fees');
@@ -497,6 +501,7 @@ export default function App() {
 
   const handleNavigateHome = () => {
     if (can('canViewDashboard')) setActiveTab('dashboard');
+    else if (can('canViewAssignments')) setActiveTab('assignments');
     else if (can('canViewStudentPortal')) setActiveTab('student-portal');
     else if (can('canViewAcademics')) setActiveTab('performance');
     else if (can('canViewFinances')) setActiveTab('fees');
@@ -931,6 +936,7 @@ export default function App() {
                     students={students}
                     records={records}
                     fees={fees}
+                    onNavigate={handleNavigate}
                   />
                 )}
 
@@ -953,6 +959,14 @@ export default function App() {
                 {activeTab === 'attendance' && (
                   <AttendanceModule 
                     students={students}
+                  />
+                )}
+
+                {/* 14b. Academic Assignments & Coursework (Nursery 1 to SSS 3 by Subject) */}
+                {activeTab === 'assignments' && (
+                  <AssignmentsModule 
+                    students={students}
+                    onNavigate={handleNavigate}
                   />
                 )}
 

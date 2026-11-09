@@ -171,8 +171,8 @@ export function useNotifications({ students, fees }: UseNotificationsProps) {
         timestamp: assign.createdAt || 'Recent',
         priority: 'medium',
         read: readIds.includes(`assign-${assign.id}`),
-        linkTab: 'staff-management',
-        linkArgs: { assignmentId: assign.id, activeSubTab: 'assignments' }
+        linkTab: 'assignments',
+        linkArgs: { assignmentId: assign.id }
       });
     });
 
@@ -187,8 +187,8 @@ export function useNotifications({ students, fees }: UseNotificationsProps) {
           timestamp: sub.submittedAt || 'Recent',
           priority: 'high',
           read: readIds.includes(`sub-${sub.id}`),
-          linkTab: 'staff-management',
-          linkArgs: { submissionId: sub.id, activeSubTab: 'submissions' }
+          linkTab: 'assignments',
+          linkArgs: { submissionId: sub.id }
         });
       }
     });

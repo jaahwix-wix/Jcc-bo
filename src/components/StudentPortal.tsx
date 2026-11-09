@@ -47,9 +47,10 @@ interface StudentPortalProps {
   students: Student[];
   records: StudentAcademicRecord[];
   fees: StudentFeeLedger[];
+  onNavigate?: (tab: string, arg?: any) => void;
 }
 
-export default function StudentPortal({ students, records, fees }: StudentPortalProps) {
+export default function StudentPortal({ students, records, fees, onNavigate }: StudentPortalProps) {
   // Login State
   const [admissionInput, setAdmissionInput] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -1249,8 +1250,18 @@ ${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
                         </div>
                       </div>
 
-                      {/* Coursework completion badge */}
-                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                      {/* Coursework completion badge & link to main assignments module */}
+                      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                        {onNavigate && (
+                          <button
+                            type="button"
+                            onClick={() => onNavigate('assignments')}
+                            className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-xl border border-teal-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <span>Browse All School Tasks</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         <span className="text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                           <span>{completedCount} of {totalClassAssignments} Completed</span>

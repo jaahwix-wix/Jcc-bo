@@ -115,6 +115,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /lessons/{lessonId} {
+      allow read, write: if true;
+    }
+
     match /announcements/{announcementId} {
       allow read, write: if true;
     }

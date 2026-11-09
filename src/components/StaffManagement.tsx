@@ -39,7 +39,7 @@ import {
   KeyRound,
   AlertTriangle
 } from 'lucide-react';
-import { StudentClass, Teacher, Assignment, Submission } from '../types';
+import { StudentClass, Teacher, Assignment, Submission, Lesson } from '../types';
 import { CLASSES_LIST } from '../constants';
 import PrincipalsNoticeBanner from './PrincipalsNoticeBanner';
 import { ensureTeacherAccessCode, generateTeacherCode } from '../utils/codeGenerator';
@@ -116,6 +116,21 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
   const [gradeScore, setGradeScore] = useState(0);
   const [gradeFeedback, setGradeFeedback] = useState('');
 
+  // Teacher Lessons & E-Learning State
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [portalSubTab, setPortalSubTab] = useState<'lessons' | 'assignments' | 'students'>('lessons');
+  const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
+  const [lessonTitle, setLessonTitle] = useState('');
+  const [lessonTopic, setLessonTopic] = useState('');
+  const [lessonSubject, setLessonSubject] = useState('');
+  const [lessonClass, setLessonClass] = useState<StudentClass>('Primary 1');
+  const [lessonTerm, setLessonTerm] = useState<number>(3);
+  const [lessonContentNotes, setLessonContentNotes] = useState('');
+  const [lessonAttachmentName, setLessonAttachmentName] = useState('');
+  const [lessonAttachmentData, setLessonAttachmentData] = useState('');
+  const [lessonAttachmentType, setLessonAttachmentType] = useState('');
+  const [previewingLesson, setPreviewingLesson] = useState<Lesson | null>(null);
+
   // Load States from Cloud Firestore & LocalStorage
   useEffect(() => {
     const unsubTeachers = syncFirestoreCollection<Teacher>(
@@ -145,10 +160,18 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
       DEFAULT_SAMPLE_SUBMISSIONS
     );
 
+    const unsubLessons = syncFirestoreCollection<Lesson>(
+      'lessons',
+      'sma_lessons',
+      (items) => setLessons(items),
+      []
+    );
+
     const handleWiped = () => {
       setTeachers([]);
       setAssignments([]);
       setSubmissions([]);
+      setLessons([]);
     };
 
     window.addEventListener('sma_database_wiped', handleWiped);
@@ -157,6 +180,7 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
       unsubTeachers();
       unsubAssignments();
       unsubSubmissions();
+      unsubLessons();
       window.removeEventListener('sma_database_wiped', handleWiped);
     };
   }, []);
@@ -168,6 +192,8 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
       localStorage.setItem('sma_teachers', JSON.stringify(newTeachers));
     } catch {}
     batchSaveToFirestore('teachers', newTeachers);
+    window.dispatchEvent(new CustomEvent('sma_teachers_updated'));
+    window.dispatchEvent(new Event('storage'));
   };
 
   const saveAssignments = (newAssigns: Assignment[]) => {
@@ -184,6 +210,16 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
       localStorage.setItem('sma_submissions', JSON.stringify(newSubs));
     } catch {}
     batchSaveToFirestore('submissions', newSubs);
+  };
+
+  const saveLessons = (newLessons: Lesson[]) => {
+    setLessons(newLessons);
+    try {
+      localStorage.setItem('sma_lessons', JSON.stringify(newLessons));
+    } catch {}
+    batchSaveToFirestore('lessons', newLessons);
+    window.dispatchEvent(new CustomEvent('sma_lessons_updated'));
+    window.dispatchEvent(new Event('storage'));
   };
 
   // Toggle Staff Verification (Admin Only)
@@ -477,6 +513,105 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
     return matchesSearch && matchesSubject;
   });
 
+  // Lesson Handlers
+  const handleOpenLessonModal = () => {
+    const teacher = teachers.find(t => t.id === selectedTeacherId);
+    setLessonTitle('');
+    setLessonTopic('');
+    setLessonSubject(teacher?.subjects[0] || 'Mathematics');
+    setLessonClass(teacher?.classes[0] || 'Primary 1');
+    setLessonTerm(3);
+    setLessonContentNotes('');
+    setLessonAttachmentName('');
+    setLessonAttachmentData('');
+    setLessonAttachmentType('');
+    setIsLessonModalOpen(true);
+  };
+
+  const handleLessonFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLessonAttachmentName(file.name);
+    setLessonAttachmentType(file.type);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLessonAttachmentData(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLessonSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const teacher = teachers.find(t => t.id === selectedTeacherId);
+    if (!teacher) return;
+
+    const newLesson: Lesson = {
+      id: `l-${Date.now()}`,
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      title: lessonTitle,
+      topic: lessonTopic,
+      subject: lessonSubject,
+      className: lessonClass,
+      term: lessonTerm,
+      contentNotes: lessonContentNotes,
+      createdAt: new Date().toISOString().substring(0, 10),
+      attachmentName: lessonAttachmentName || undefined,
+      attachmentData: lessonAttachmentData || undefined,
+      attachmentType: lessonAttachmentType || undefined
+    };
+
+    saveLessons([...lessons, newLesson]);
+    setIsLessonModalOpen(false);
+  };
+
+  const handleDeleteLesson = (id: string) => {
+    const updated = lessons.filter(l => l.id !== id);
+    saveLessons(updated);
+    deleteFromFirestore('lessons', id);
+  };
+
+  const handleDownloadLesson = (lesson: Lesson) => {
+    if (lesson.attachmentData) {
+      const a = document.createElement('a');
+      a.href = lesson.attachmentData;
+      a.download = lesson.attachmentName || `${lesson.title.replace(/\s+/g, '_')}_Material.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const content = `========================================================================
+${SCHOOL_INFO.name.toUpperCase()}
+Principal: ${SCHOOL_INFO.principalName} (${SCHOOL_INFO.principalTitle})
+ACADEMIC LESSON & STUDY MATERIAL
+========================================================================
+Title:         ${lesson.title}
+Topic:         ${lesson.topic || 'General Curriculum Topic'}
+Subject:       ${lesson.subject}
+Class / Level: ${lesson.className}
+Term:          Term ${lesson.term}
+Educator:      ${lesson.teacherName}
+Published:     ${lesson.createdAt}
+------------------------------------------------------------------------
+CURRICULUM LESSON NOTES & STUDY DIRECTIVES:
+------------------------------------------------------------------------
+${lesson.contentNotes || '(No textual notes provided; consult class teacher)'}
+
+========================================================================
+${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
+========================================================================`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${lesson.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Lesson_Notes.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // Get active teacher details for portal mode
   const currentTeacher = teachers.find(t => t.id === selectedTeacherId);
   const teacherAssignments = assignments.filter(a => a.teacherId === selectedTeacherId);
@@ -484,6 +619,8 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
     const assign = assignments.find(a => a.id === s.assignmentId);
     return assign?.teacherId === selectedTeacherId;
   });
+  const teacherLessons = lessons.filter(l => l.teacherId === selectedTeacherId);
+  const teacherAssignedStudents = students.filter(s => currentTeacher?.classes.includes(s.currentClass));
 
   return (
     <div className="space-y-6" id="staff-management-panel">
@@ -857,7 +994,176 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
           </div>
 
           {currentTeacher ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="space-y-6">
+              {/* Educator Sub-Navigation Tabs */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setPortalSubTab('lessons')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    portalSubTab === 'lessons'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Upload & Manage Lessons</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${portalSubTab === 'lessons' ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-100 text-slate-600'}`}>
+                    {teacherLessons.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPortalSubTab('assignments')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    portalSubTab === 'assignments'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  <span>Assignments & Submissions</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${portalSubTab === 'assignments' ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-100 text-slate-600'}`}>
+                    {teacherAssignments.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPortalSubTab('students')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    portalSubTab === 'students'
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Assigned Students</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${portalSubTab === 'students' ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-100 text-slate-600'}`}>
+                    {teacherAssignedStudents.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* 1. LESSONS & STUDY MATERIALS SUB-TAB */}
+              {portalSubTab === 'lessons' && (
+                <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                        <BookOpen className="w-5 h-5 text-indigo-600" /> Curriculum Lessons & Study Materials
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Publish lesson notes, schemes of work, and study attachments for your assigned classes. Students can read and download them.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleOpenLessonModal}
+                      className="flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                    >
+                      <Plus className="w-4 h-4" /> Upload Lesson Material
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {teacherLessons.map(lesson => (
+                      <div 
+                        key={lesson.id}
+                        className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all space-y-3"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-wrap gap-1.5">
+                              <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-mono">
+                                {lesson.subject}
+                              </span>
+                              <span className="text-[9px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono">
+                                {lesson.className}
+                              </span>
+                              <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">
+                                Term {lesson.term}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLesson(lesson.id)}
+                              className="p-1 hover:bg-rose-100 text-rose-500 rounded cursor-pointer transition-colors"
+                              title="Delete Lesson"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <h4 className="font-bold text-slate-900 text-sm leading-tight">{lesson.title}</h4>
+                          {lesson.topic && (
+                            <p className="text-[11px] font-semibold text-indigo-600 font-mono">
+                              Topic: {lesson.topic}
+                            </p>
+                          )}
+
+                          {lesson.contentNotes && (
+                            <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mt-1">
+                              {lesson.contentNotes}
+                            </p>
+                          )}
+
+                          {lesson.attachmentName && (
+                            <div className="flex items-center gap-1.5 text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1.5 rounded-lg border border-indigo-100 font-mono">
+                              <Paperclip className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              <span className="truncate font-semibold">{lesson.attachmentName}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {lesson.createdAt}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            {lesson.contentNotes && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewingLesson(lesson)}
+                                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 font-bold text-[10px] rounded-lg border border-slate-200 shadow-2xs cursor-pointer transition-colors"
+                              >
+                                Read Notes
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadLesson(lesson)}
+                              className="flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] rounded-lg shadow-2xs cursor-pointer transition-colors"
+                              title="Download Lesson Material"
+                            >
+                              <Download className="w-3 h-3" /> Download
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {teacherLessons.length === 0 && (
+                    <div className="py-16 text-center text-slate-400">
+                      <BookOpen className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                      <p className="text-sm font-bold text-slate-700">No lesson materials uploaded yet</p>
+                      <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                        Click the "Upload Lesson Material" button to publish study notes, lesson handouts, and syllabus documents for your pupils.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. ASSIGNMENTS & SUBMISSIONS SUB-TAB */}
+              {portalSubTab === 'assignments' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
               {/* LEFT: Assignments Posted */}
               <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-6">
@@ -1040,9 +1346,72 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
                   )}
                 </div>
               </div>
-
             </div>
-          ) : (
+          )}
+
+          {/* 3. ASSIGNED STUDENTS SUB-TAB */}
+          {portalSubTab === 'students' && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-6">
+              <div className="border-b border-slate-100 pb-4">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                  <GraduationCap className="w-5 h-5 text-indigo-600" /> Assigned Class Pupils ({teacherAssignedStudents.length})
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Pupils currently enrolled in your classes ({currentTeacher.classes.join(', ')}).
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {teacherAssignedStudents.map(stud => (
+                  <div 
+                    key={stud.id}
+                    className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5 flex flex-col justify-between hover:shadow-xs transition-shadow"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-mono">
+                          {stud.currentClass}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {stud.admissionNumber}
+                        </span>
+                      </div>
+
+                      <h4 className="font-bold text-slate-900 text-sm">{stud.name}</h4>
+                      <p className="text-xs text-slate-500">
+                        Guardian: <strong className="text-slate-700">{stud.parentName}</strong> ({stud.parentPhone})
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                      <span className="text-slate-500 font-medium">Status: <strong className="text-emerald-600">Active Pupil</strong></span>
+                      {onNavigate && (
+                        <button
+                          type="button"
+                          onClick={() => onNavigate('students', { studentId: stud.id })}
+                          className="text-indigo-600 font-bold hover:underline cursor-pointer"
+                        >
+                          Profile &rarr;
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {teacherAssignedStudents.length === 0 && (
+                <div className="py-16 text-center text-slate-400">
+                  <GraduationCap className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm font-bold text-slate-700">No students enrolled in your assigned classes yet</p>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                    When administration enrolls students in {currentTeacher.classes.join(', ')}, they will automatically be linked to your portal.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
             <div className="py-16 text-center text-slate-400 bg-white border border-slate-100 rounded-2xl">
               <Users className="w-12 h-12 mx-auto text-slate-200 mb-2" />
               <p className="text-sm font-semibold">Please select a teacher profile to access the educator workspace.</p>
@@ -1547,6 +1916,226 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Yes, Delete All Staff</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL: UPLOAD LESSON MATERIAL */}
+      {isLessonModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-xl border border-slate-100 overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <BookOpen className="w-5 h-5 text-indigo-600" /> Upload Lesson & Study Material
+              </h3>
+              <button 
+                onClick={() => setIsLessonModalOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 transition-colors cursor-pointer"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleLessonSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Lesson Title</label>
+                <input
+                  type="text"
+                  required
+                  value={lessonTitle}
+                  onChange={(e) => setLessonTitle(e.target.value)}
+                  placeholder="e.g. Introduction to Fractions and Mixed Numbers"
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700 font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Topic / Unit</label>
+                  <input
+                    type="text"
+                    value={lessonTopic}
+                    onChange={(e) => setLessonTopic(e.target.value)}
+                    placeholder="e.g. Unit 3: Arithmetic Operations"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Subject</label>
+                  <input
+                    type="text"
+                    required
+                    value={lessonSubject}
+                    onChange={(e) => setLessonSubject(e.target.value)}
+                    placeholder="e.g. Mathematics"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Assigned Class / Level</label>
+                  <select
+                    value={lessonClass}
+                    onChange={(e) => setLessonClass(e.target.value as StudentClass)}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700 font-bold cursor-pointer bg-white"
+                  >
+                    {CLASSES_LIST.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Academic Term</label>
+                  <select
+                    value={lessonTerm}
+                    onChange={(e) => setLessonTerm(Number(e.target.value))}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700 font-bold cursor-pointer bg-white"
+                  >
+                    <option value={1}>Term 1</option>
+                    <option value={2}>Term 2</option>
+                    <option value={3}>Term 3</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Lesson Content & Study Notes</label>
+                <textarea
+                  rows={4}
+                  value={lessonContentNotes}
+                  onChange={(e) => setLessonContentNotes(e.target.value)}
+                  placeholder="Provide lesson definitions, formula explanations, key reading points, or curriculum summary for students to study..."
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-indigo-500 text-slate-700 leading-relaxed"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Attach Document / Worksheet / Slides</label>
+                <div className="flex items-center gap-2">
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-600 cursor-pointer transition-colors">
+                    <UploadCloud className="w-4 h-4 text-indigo-600" />
+                    <span>{lessonAttachmentName ? lessonAttachmentName : 'Select PDF, Word, Presentation, or Image'}</span>
+                    <input 
+                      type="file" 
+                      onChange={handleLessonFileUpload}
+                      className="hidden" 
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg"
+                    />
+                  </label>
+                  {lessonAttachmentName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLessonAttachmentName('');
+                        setLessonAttachmentData('');
+                        setLessonAttachmentType('');
+                      }}
+                      className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl"
+                      title="Remove attachment"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  Publish Lesson Material
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLessonModalOpen(false)}
+                  className="py-2.5 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PREVIEW LESSON NOTES */}
+      {previewingLesson && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div className="min-w-0 pr-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-mono">
+                    {previewingLesson.subject}
+                  </span>
+                  <span className="text-[9px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono">
+                    {previewingLesson.className}
+                  </span>
+                </div>
+                <h3 className="font-bold text-slate-900 text-sm mt-1 truncate">{previewingLesson.title}</h3>
+              </div>
+              <button 
+                onClick={() => setPreviewingLesson(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-700 leading-relaxed font-sans">
+              {previewingLesson.topic && (
+                <div className="p-2.5 bg-indigo-50/60 border border-indigo-100 rounded-xl text-indigo-900 font-medium">
+                  <strong>Curriculum Unit:</strong> {previewingLesson.topic}
+                </div>
+              )}
+
+              <div>
+                <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-slate-400 mb-1.5">
+                  Study Notes & Explanation
+                </h4>
+                <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl whitespace-pre-wrap font-sans text-xs text-slate-800 leading-relaxed">
+                  {previewingLesson.contentNotes || 'No textual content provided.'}
+                </div>
+              </div>
+
+              {previewingLesson.attachmentName && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="text-xs font-bold text-emerald-900 truncate">
+                      {previewingLesson.attachmentName}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadLesson(previewingLesson)}
+                    className="flex items-center gap-1 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px] cursor-pointer"
+                  >
+                    <Download className="w-3 h-3" /> Download
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <span className="text-[10px] text-slate-400 font-mono">
+                Teacher: {previewingLesson.teacherName}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDownloadLesson(previewingLesson);
+                  setPreviewingLesson(null);
+                }}
+                className="flex items-center gap-1.5 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs cursor-pointer shadow-xs"
+              >
+                <Download className="w-3.5 h-3.5" /> Download Full Material
               </button>
             </div>
           </div>

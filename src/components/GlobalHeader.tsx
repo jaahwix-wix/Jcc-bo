@@ -22,7 +22,8 @@ import {
   Copy,
   Check,
   Globe,
-  Cloud
+  Cloud,
+  LogOut
 } from 'lucide-react';
 import { Student, StudentFeeLedger } from '../types';
 import { SCHOOL_INFO } from '../initialData';
@@ -47,7 +48,7 @@ export default function GlobalHeader({
   onOpenPrivileges, 
   onOpenCloudReferenceModal
 }: GlobalHeaderProps) {
-  const { user, role, privileges, isFirebaseOnline, lockSession, secondsRemaining } = useAuth();
+  const { user, role, privileges, isFirebaseOnline, signOutUser } = useAuth();
   const { alerts, unreadCount, markAsRead, markAllAsRead, addAnnouncement } = useNotifications({ students, fees });
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -388,6 +389,18 @@ export default function GlobalHeader({
           </div>
 
           <Shield className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors shrink-0" />
+        </button>
+
+        {/* Global Log Out Button */}
+        <button
+          type="button"
+          onClick={() => signOutUser()}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold transition-all cursor-pointer shadow-2xs group"
+          title="Sign out and return to the login screen"
+          id="global-header-logout-btn"
+        >
+          <LogOut className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform" />
+          <span className="hidden sm:inline">Log Out</span>
         </button>
       </div>
     </header>

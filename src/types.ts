@@ -28,6 +28,8 @@ export interface Student {
   address: string;
   previousSchool?: string;
   enrollmentYear: number;
+  enrollmentDate?: string;
+  academicYear?: string;
   status: 'Active' | 'Transferred' | 'Graduated';
   archiveStatus?: 'Active' | 'Archived' | 'Withdrawn';
   profileColor?: string;
@@ -36,6 +38,7 @@ export interface Student {
   bloodType?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  emergencyPhone?: string;
   emergencyContactRelation?: string;
   parentAccessCode?: string; // Auto-generated code for Parent Portal access (e.g. PAR-8492)
   studentAccessCode?: string; // Auto-generated code for Student Portal access
@@ -173,6 +176,7 @@ export interface Teacher {
   hireDate: string;
   payrollStatus: 'Paid' | 'Pending' | 'Unpaid';
   accessCode?: string; // Auto-generated code for Teacher Portal access (e.g. TCH-3918)
+  password?: string; // Custom staff password
   avatarColor?: string;
   verified?: boolean;
   verifiedBy?: string;
@@ -212,6 +216,26 @@ export interface Submission {
   status: 'Pending' | 'Graded';
   score?: number;
   feedback?: string;
+}
+
+export interface Lesson {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  title: string;
+  topic: string;
+  description?: string;
+  subject: string;
+  className: StudentClass;
+  term?: number;
+  uploadedAt?: string;
+  createdAt?: string;
+  contentNotes?: string;
+  attachmentName?: string;
+  attachmentSize?: string;
+  attachmentType?: string;
+  attachmentData?: string;
+  attachmentUrl?: string;
 }
 
 export interface SchoolAnnouncement {

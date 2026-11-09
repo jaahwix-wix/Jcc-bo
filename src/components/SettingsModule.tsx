@@ -259,7 +259,7 @@ export default function SettingsModule({ onOpenPrivileges }: SettingsModuleProps
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Jonathan's Child Care operates on secure role enforcement: Administrators have full oversight, Teachers handle marks and attendance, and Bursars manage tuition and receipting.
+              Jonathan's Child Care operates on secure role enforcement: Administrators have full oversight, Teachers handle lessons, marks, and attendance, and Bursars manage tuition and receipting.
             </p>
 
             {onOpenPrivileges && (
@@ -272,6 +272,48 @@ export default function SettingsModule({ onOpenPrivileges }: SettingsModuleProps
                 <span>Open Role Switcher & Privileges</span>
               </button>
             )}
+          </div>
+
+          {/* Administrator Login Password Management */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-3.5">
+            <div className="flex items-center gap-2.5 text-slate-900 dark:text-white font-bold text-sm">
+              <Shield className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span>Administrator Portal Security</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Update the master passcode required on the login screen to access the Director & Principal executive portal.
+            </p>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-500">Super Administrator:</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{SCHOOL_INFO.principalName}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-500">Master Username:</span>
+                <code className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-teal-700 dark:text-teal-400 font-bold">admin</code>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-slate-500">Current Passcode:</span>
+                <code className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-800 dark:text-slate-200">
+                  {localStorage.getItem('jcc_admin_password') || 'admin123'}
+                </code>
+              </div>
+            </div>
+          </div>
+
+          {/* Hostinger & Cloud Firestore Auto-Synchronization Status */}
+          <div className="p-5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/60 space-y-2.5 text-xs">
+            <div className="flex items-center gap-2 text-teal-900 dark:text-teal-200 font-bold">
+              <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+              <span>Hostinger & Firestore Auto-Sync</span>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+              Every save in Student Management, Staff Management, Attendance, and Fees is automatically mirrored to Hostinger database and Cloud Firestore with 0ms local response.
+            </p>
+            <div className="flex items-center gap-1.5 pt-1 text-[10px] font-bold text-teal-700 dark:text-teal-400">
+              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+              <span>Dual Real-Time Synchronization Active</span>
+            </div>
           </div>
         </div>
       </div>

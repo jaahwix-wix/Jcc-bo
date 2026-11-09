@@ -22,6 +22,7 @@ export const DATA_STORAGE_KEYS = [
   'sma_teachers',
   'sma_assignments',
   'sma_submissions',
+  'sma_lessons',
   'sma_announcements',
   'sma_read_notifications',
   'sma_library_books',
@@ -46,10 +47,11 @@ export function wipeAllSystemData(): void {
   localStorage.setItem('sma_exam_preps', JSON.stringify([]));
   localStorage.setItem('sma_fee_ledgers', JSON.stringify([]));
   
-  // Clear staff, assignments, and submissions
+  // Clear staff, assignments, submissions, and lessons
   localStorage.setItem('sma_teachers', JSON.stringify([]));
   localStorage.setItem('sma_assignments', JSON.stringify([]));
   localStorage.setItem('sma_submissions', JSON.stringify([]));
+  localStorage.setItem('sma_lessons', JSON.stringify([]));
   localStorage.setItem('sma_announcements', JSON.stringify([]));
   localStorage.setItem('sma_read_notifications', JSON.stringify([]));
 

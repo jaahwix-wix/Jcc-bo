@@ -173,7 +173,7 @@ export default function Dashboard({
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {}
-    return DEMO_SAMPLE_TEACHERS;
+    return [];
   }, []);
 
   const totalStaffCount = staffList.length;

@@ -31,8 +31,10 @@ import {
   PanelLeftClose,
   PanelLeft,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
+import LoginPage from './components/LoginPage';
 import { Student, StudentAcademicRecord, NationalExamPrep, StudentFeeLedger, FeeTransaction } from './types';
 import { 
   INITIAL_STUDENTS, 
@@ -89,7 +91,7 @@ export { getPendingFeeStudents };
 export type { PendingFeeStudent };
 
 export default function App() {
-  const { user, role, privileges, can, isFirebaseOnline, setPortalActive, unlockSession } = useAuth();
+  const { user, role, privileges, can, isFirebaseOnline, isAuthenticated, setPortalActive, unlockSession, signOutUser } = useAuth();
   const [isPrivilegesModalOpen, setIsPrivilegesModalOpen] = useState(false);
   const [isCloudReferenceModalOpen, setIsCloudReferenceModalOpen] = useState(false);
 
@@ -110,11 +112,12 @@ export default function App() {
     localStorage.setItem('sma_theme', theme);
   }, [theme]);
 
-  // Ensure portal mode is always active and session unlocked on load
+  // Track authenticated portal state
   useEffect(() => {
-    setPortalActive(true);
-    unlockSession();
-  }, [setPortalActive, unlockSession]);
+    if (user && isAuthenticated) {
+      setPortalActive(true);
+    }
+  }, [user, isAuthenticated, setPortalActive]);
 
   // Active Tab Navigation State
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -189,9 +192,14 @@ export default function App() {
 
   // Clean slate initialization to ensure pristine state
   useEffect(() => {
-    const cleanKey = 'sma_clean_slate_active_v8';
+    const cleanKey = 'jcc_clean_slate_v16_pristine';
     if (localStorage.getItem(cleanKey) !== 'true') {
       wipeAllSystemData();
+      localStorage.removeItem('jcc_authenticated_user');
+      sessionStorage.removeItem('jcc_authenticated_user');
+      localStorage.removeItem('sma_active_role');
+      localStorage.removeItem('sma_active_portal_student');
+      localStorage.removeItem('jcc_teacher_session');
       setStudents([]);
       setRecords([]);
       setExamPreps([]);
@@ -496,6 +504,17 @@ export default function App() {
     else setActiveTab('dashboard');
   };
 
+  // Institutional Login Screen is ALWAYS the first home page when not authenticated
+  if (!user || !isAuthenticated) {
+    return (
+      <LoginPage 
+        onLoginSuccess={(targetTab) => {
+          if (targetTab) setActiveTab(targetTab);
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200" id="main-app-container">
       
@@ -634,7 +653,7 @@ export default function App() {
                   className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30 text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
                 >
                   <Shield className="w-3.5 h-3.5" />
-                  <span>Roles & Privileges</span>
+                  <span>Roles</span>
                 </button>
                 <button
                   onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
@@ -642,6 +661,13 @@ export default function App() {
                   title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
                 >
                   {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+                </button>
+                <button
+                  onClick={() => signOutUser()}
+                  className="p-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 hover:text-white transition-all cursor-pointer border border-rose-500/30 shadow-2xs flex items-center justify-center shrink-0"
+                  title="Log Out of JCC MIS"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -660,6 +686,13 @@ export default function App() {
                 title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
                 {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+              </button>
+              <button
+                onClick={() => signOutUser()}
+                className="w-10 h-10 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 flex items-center justify-center transition-all cursor-pointer"
+                title="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -762,6 +795,17 @@ export default function App() {
               >
                 <Shield className="w-4 h-4" />
                 <span>Privileges & Switcher</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  signOutUser();
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out Session</span>
               </button>
 
               <div className="text-[10px] text-slate-500 border-t border-slate-800 pt-3">

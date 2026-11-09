@@ -224,7 +224,7 @@ export default function VerificationQueue({ students, onUpdateStudent, onNavigat
           </div>
           <h4 className="font-extrabold text-sm text-emerald-900">Verification Queue Clear</h4>
           <p className="text-xs text-emerald-700 max-w-md mx-auto">
-            All registered student files and teaching staff profiles have been verified and approved by Administrator Evangelist Saint Turay.
+            All registered student files and teaching staff profiles have been verified and approved by {SCHOOL_INFO.principalTitle} {SCHOOL_INFO.principalName}.
           </p>
         </div>
       ) : (

@@ -24,11 +24,11 @@ import { useAuth } from '../context/AuthContext';
 import { broadcastNoticeSMS } from '../utils/smsNoticeUtils';
 
 export const DEFAULT_PRINCIPALS_NOTICE: PrincipalsNotice & { targetClass?: string; smsSentCount?: number } = {
-  id: 'pn-est-001',
+  id: 'pn-jd-001',
   title: 'Term 3 Executive Directive: WASSCE Candidate Clearance, CA Registers & Terminal Tuition',
   content: 'All academic staff are instructed to finalize and submit terminal Continuous Assessment (CA) registers to the Vice Principal. Mandatory weekend revision clinics for NPSE, BECE, and WASSCE candidates are active every Saturday at 8:30 AM. Parents and guardians must settle outstanding tuition dues with the Bursary office before official terminal examination seat cards are issued.',
-  author: 'Evangelist Saint Turay',
-  role: 'CEO & Principal',
+  author: 'Jonathan Davis',
+  role: 'Director and Principal',
   date: 'September 12, 2026',
   isPinned: true,
   priority: 'Official Directive',
@@ -50,7 +50,13 @@ export default function PrincipalsNoticeBanner({ variant = 'dashboard' }: Princi
     const cached = localStorage.getItem('sma_principal_pinned_notice');
     if (cached) {
       try {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (parsed.author && (parsed.author.includes('Turay') || parsed.author.includes('Saint'))) {
+          parsed.author = 'Jonathan Davis';
+          parsed.role = 'Director and Principal';
+          localStorage.setItem('sma_principal_pinned_notice', JSON.stringify(parsed));
+        }
+        return parsed;
       } catch (e) {
         console.error('Failed to parse principal notice', e);
       }
@@ -116,7 +122,7 @@ export default function PrincipalsNoticeBanner({ variant = 'dashboard' }: Princi
       content: formContent.trim(),
       author: SCHOOL_INFO.principalName,
       authorRole: 'admin',
-      authorEmail: 'principal.givers@school.edu.sl',
+      authorEmail: 'director.principal@jonathanschildcare.org',
       targetClass: formTargetClass as any,
       priority: formPriority as any,
       category: 'General',
@@ -145,7 +151,7 @@ export default function PrincipalsNoticeBanner({ variant = 'dashboard' }: Princi
       targetClass: formTargetClass,
       smsSentCount: smsResult.totalSent,
       author: SCHOOL_INFO.principalName,
-      role: 'CEO & Principal',
+      role: 'Director and Principal',
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       isPinned: true,
       lastUpdated: new Date().toISOString().split('T')[0]
@@ -261,7 +267,7 @@ export default function PrincipalsNoticeBanner({ variant = 'dashboard' }: Princi
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-white">Principal's Pinned Announcement</h3>
-                  <p className="text-xs text-amber-300">Evangelist Saint Turay (CEO/Principal Executive Dispatch with SMS)</p>
+                  <p className="text-xs text-amber-300">Jonathan Davis (Director and Principal Executive Dispatch with SMS)</p>
                 </div>
               </div>
               <button

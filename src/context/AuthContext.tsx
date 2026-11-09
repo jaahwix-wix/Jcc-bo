@@ -21,8 +21,10 @@ interface AuthContextType {
   privileges: RolePrivileges;
   isLoading: boolean;
   isFirebaseOnline: boolean;
+  isAuthenticated: boolean;
   signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
+  loginAs: (user: AuthUser) => void;
   switchRole: (role: UserRole) => void;
   updateUserRole: (targetUserId: string, newRole: UserRole) => Promise<void>;
   userList: AuthUser[];
@@ -30,7 +32,7 @@ interface AuthContextType {
   isSessionLocked: boolean;
   secondsRemaining: number;
   lockSession: () => void;
-  unlockSession: (role?: UserRole) => void;
+  unlockSession: (role?: UserRole, customUser?: AuthUser) => void;
   resetInactivityTimer: () => void;
   isPortalActive: boolean;
   setPortalActive: (active: boolean) => void;
@@ -144,13 +146,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Non-blocking in case of restricted write
         }
       } else {
-        // Fallback to active demo account stored in localStorage or default to Super Admin
-        const cachedDemoRole = localStorage.getItem('sma_active_role') as UserRole;
-        if (cachedDemoRole && DEMO_PRESET_USERS[cachedDemoRole]) {
-          setUser(DEMO_PRESET_USERS[cachedDemoRole]);
-        } else {
-          setUser(DEMO_PRESET_USERS.admin);
+        // Only restore if a verified authenticated session exists
+        const storedSession = sessionStorage.getItem('jcc_authenticated_user') || localStorage.getItem('jcc_authenticated_user');
+        if (storedSession) {
+          try {
+            const parsed = JSON.parse(storedSession);
+            if (parsed && parsed.role) {
+              setUser(parsed);
+              setIsSessionLocked(false);
+              setIsLoading(false);
+              return;
+            }
+          } catch {}
         }
+        setUser(null);
+        setIsSessionLocked(true);
       }
       setIsLoading(false);
     });
@@ -203,26 +213,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSecondsRemaining(0);
   }, []);
 
-  // Function to unlock session
-  const unlockSession = useCallback((roleToUnlock?: UserRole) => {
-    if (roleToUnlock) {
-      localStorage.setItem('sma_active_role', roleToUnlock);
-      setUser(prev => {
-        if (prev) {
-          return {
-            ...prev,
-            role: roleToUnlock,
-            displayName: prev.displayName || DEMO_PRESET_USERS[roleToUnlock].displayName,
-          };
-        }
-        return DEMO_PRESET_USERS[roleToUnlock];
-      });
-    }
+  // Login as a specific authenticated account
+  const loginAs = useCallback((authUser: AuthUser) => {
+    setUser(authUser);
+    localStorage.setItem('sma_active_role', authUser.role);
+    sessionStorage.setItem('jcc_authenticated_user', JSON.stringify(authUser));
+    localStorage.setItem('jcc_authenticated_user', JSON.stringify(authUser));
     setIsSessionLocked(false);
     sessionStorage.removeItem('sma_session_locked');
     lastActivityRef.current = Date.now();
     setSecondsRemaining(INACTIVITY_TIMEOUT_SECONDS);
   }, []);
+
+  // Function to unlock session
+  const unlockSession = useCallback((roleToUnlock?: UserRole, customUser?: AuthUser) => {
+    if (customUser) {
+      loginAs(customUser);
+      return;
+    }
+    const targetRole = roleToUnlock || 'admin';
+    const preset = DEMO_PRESET_USERS[targetRole];
+    loginAs(preset);
+  }, [loginAs]);
 
   // Reset inactivity timer
   const resetInactivityTimer = useCallback(() => {
@@ -285,13 +297,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       await firebaseSignOut(auth);
-      // Reset to default guest admin demo for testing and unlock session
-      setUser(DEMO_PRESET_USERS.admin);
+      // Cleanly clear session and return to Login Screen
+      setUser(null);
       localStorage.removeItem('sma_active_role');
-      setIsSessionLocked(false);
+      localStorage.removeItem('jcc_authenticated_user');
+      sessionStorage.removeItem('jcc_authenticated_user');
+      localStorage.removeItem('sma_active_portal_student');
+      setIsSessionLocked(true);
       setIsPortalActiveRaw(false);
-      sessionStorage.removeItem('sma_session_locked');
-      setSecondsRemaining(INACTIVITY_TIMEOUT_SECONDS);
+      sessionStorage.setItem('sma_session_locked', 'true');
+      setSecondsRemaining(0);
     } catch (error) {
       console.error('Sign out error:', error);
     } finally {
@@ -339,6 +354,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const isAuthenticated = Boolean(user);
+
   return (
     <AuthContext.Provider
       value={{
@@ -347,8 +364,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         privileges,
         isLoading,
         isFirebaseOnline,
+        isAuthenticated,
         signInWithGoogle,
         signOutUser,
+        loginAs,
         switchRole,
         updateUserRole,
         userList,

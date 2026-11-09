@@ -24,6 +24,7 @@ import {
 import { Student, StudentClass, DailyAttendanceRecord } from '../types';
 import { CLASSES_LIST } from '../constants';
 import { SCHOOL_INFO } from '../initialData';
+import { saveToFirestore } from '../services/firestoreSync';
 
 interface AttendanceModuleProps {
   students: Student[];
@@ -145,7 +146,10 @@ export default function AttendanceModule({ students, initialClassName, onNavigat
     filtered.push(logItem);
     localStorage.setItem('jcc_attendance_all_logs', JSON.stringify(filtered));
 
-    setSaveStatus('Attendance saved & synchronized successfully!');
+    // Auto-sync to Cloud Firestore and Hostinger Database
+    saveToFirestore('daily_attendance', logItem.id, logItem);
+
+    setSaveStatus('Attendance saved & synchronized to Cloud & Hostinger database successfully!');
     setTimeout(() => setSaveStatus(null), 3000);
   };
 

@@ -25,6 +25,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 import { ROLE_PRIVILEGES_MAP } from '../firebase';
+import { SCHOOL_INFO } from '../initialData';
 import { motion } from 'motion/react';
 
 interface PrivilegesModalProps {
@@ -109,7 +110,7 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
     { key: 'canManageLibrary', label: 'Library Catalog, Checkouts & Returns', module: 'Library' },
     { key: 'canBackupData', label: 'System Backup, JSON Export & Core Settings', module: 'System' },
     { key: 'canManageUserRoles', label: 'User Role Assignment & Privileges Control', module: 'Security' },
-    { key: 'canVerifyStaffAndStudents', label: 'Official Verification of Staff & Students (Principal: Evangelist Saint Turay)', module: 'Governance' },
+    { key: 'canVerifyStaffAndStudents', label: `Official Verification of Staff & Students (${SCHOOL_INFO.principalTitle}: ${SCHOOL_INFO.principalName})`, module: 'Governance' },
   ];
 
   return (

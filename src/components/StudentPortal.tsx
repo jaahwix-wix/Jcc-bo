@@ -31,13 +31,17 @@ import {
   CheckCircle2,
   Clock,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  BookOpen,
+  Paperclip
 } from 'lucide-react';
 import QRCode from 'qrcode';
-import { Student, StudentAcademicRecord, StudentFeeLedger, StudentClass } from '../types';
+import { Student, StudentAcademicRecord, StudentFeeLedger, StudentClass, Lesson } from '../types';
 import { SCHOOL_INFO, INITIAL_STUDENTS } from '../initialData';
 import { getSubjectsForClass, calculateGrade, getGradingScale } from '../constants';
 import PrincipalsNoticeBanner from './PrincipalsNoticeBanner';
+import { useAuth } from '../context/AuthContext';
+import { saveToFirestore } from '../services/firestoreSync';
 
 interface StudentPortalProps {
   students: Student[];
@@ -86,9 +90,15 @@ export default function StudentPortal({ students, records, fees }: StudentPortal
     }
   }, [students, loggedInStudent]);
   
+  const { signOutUser } = useAuth();
+  
   // Active Tab inside Portal
-  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'financials' | 'assignments' | 'attendance_qr'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'academics' | 'financials' | 'lessons' | 'assignments' | 'attendance_qr'>('overview');
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<'All' | 'Pending' | 'Submitted' | 'Graded'>('All');
+  
+  // Lessons & E-Learning State
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [previewingLesson, setPreviewingLesson] = useState<Lesson | null>(null);
   
   // Attendance QR Code & Scanner State
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
@@ -211,7 +221,7 @@ ASSIGNMENT INSTRUCTIONS & QUESTIONS:
 ${assign.description}
 
 ========================================================================
-Submit your solutions via the Givers World Mission High School Student Portal.
+Submit your solutions via the ${SCHOOL_INFO.name} Student Portal.
 ========================================================================`;
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -225,19 +235,67 @@ Submit your solutions via the Givers World Mission High School Student Portal.
     }
   };
 
+  // Download Lesson Material for Students & Parents
+  const handleDownloadLesson = (lesson: Lesson) => {
+    if (lesson.attachmentData) {
+      const a = document.createElement('a');
+      a.href = lesson.attachmentData;
+      a.download = lesson.attachmentName || `${lesson.title.replace(/\s+/g, '_')}_Material.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const content = `========================================================================
+${SCHOOL_INFO.name.toUpperCase()}
+Principal: ${SCHOOL_INFO.principalName} (${SCHOOL_INFO.principalTitle})
+ACADEMIC LESSON & STUDY NOTES
+========================================================================
+Title:         ${lesson.title}
+Topic:         ${lesson.topic || 'Curriculum Syllabus Unit'}
+Subject:       ${lesson.subject}
+Class / Level: ${lesson.className}
+Term:          Term ${lesson.term}
+Teacher:       ${lesson.teacherName}
+Published:     ${lesson.createdAt}
+------------------------------------------------------------------------
+CURRICULUM LESSON NOTES & STUDY DIRECTIVES:
+------------------------------------------------------------------------
+${lesson.contentNotes || '(No textual notes provided; review class textbook)'}
+
+========================================================================
+${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
+========================================================================`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${lesson.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Lesson_Notes.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // Sync with LocalStorage
   useEffect(() => {
     const handleStorageUpdate = () => {
       const cachedAssignments = localStorage.getItem('sma_assignments');
       const cachedSubmissions = localStorage.getItem('sma_submissions');
+      const cachedLessons = localStorage.getItem('sma_lessons');
       if (cachedAssignments) setAssignments(JSON.parse(cachedAssignments));
       if (cachedSubmissions) setSubmissions(JSON.parse(cachedSubmissions));
+      if (cachedLessons) setLessons(JSON.parse(cachedLessons));
     };
 
     handleStorageUpdate();
     // Also listen to storage events to keep sync when tabs change
     window.addEventListener('storage', handleStorageUpdate);
-    return () => window.removeEventListener('storage', handleStorageUpdate);
+    window.addEventListener('sma_lessons_updated', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('sma_lessons_updated', handleStorageUpdate);
+    };
   }, [activeTab]);
   
   // Academics selector
@@ -276,6 +334,7 @@ Submit your solutions via the Givers World Mission High School Student Portal.
     setLoggedInStudent(null);
     setAdmissionInput('');
     setErrorMessage(null);
+    signOutUser();
   };
 
   // If NOT logged in, show elegant Login Gate
@@ -435,6 +494,7 @@ Submit your solutions via the Givers World Mission High School Student Portal.
   const studentPendingCount = studentClassAssignments.filter(
     a => !submissions.some(s => s.assignmentId === a.id && s.studentId === student.id)
   ).length;
+  const studentLessons = lessons.filter(l => l.className === student.currentClass);
 
   return (
     <div className="space-y-6" id="student-portal-dashboard">
@@ -521,6 +581,21 @@ Submit your solutions via the Givers World Mission High School Student Portal.
           }`}
         >
           <CreditCard className="w-4 h-4" /> Tuition & Fees
+        </button>
+        <button
+          onClick={() => setActiveTab('lessons')}
+          className={`flex items-center gap-2 py-3 px-4 font-bold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === 'lessons'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" /> Lessons & Notes
+          {studentLessons.length > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 border border-indigo-200">
+              {studentLessons.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('assignments')}
@@ -1011,6 +1086,109 @@ Submit your solutions via the Givers World Mission High School Student Portal.
                 <p className="text-xs text-slate-400 mt-1">Please ask your finance officer to initialize tuition accounts.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* LESSONS & STUDY MATERIALS TAB */}
+        {activeTab === 'lessons' && (
+          <div className="space-y-6" id="portal-lessons-pane">
+            <div className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-base">Class Lessons & Study Materials</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Download lecture notes, reading modules, and study guides published by your teachers for {student.currentClass}.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-slate-400 uppercase font-bold text-[10px]">Total Available:</span>
+                  <span className="font-bold text-indigo-600">{studentLessons.length} Modules</span>
+                </div>
+              </div>
+
+              {studentLessons.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {studentLessons.map(lesson => (
+                    <div 
+                      key={lesson.id}
+                      className="p-5 bg-slate-50/60 hover:bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all space-y-4"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-md font-mono">
+                            {lesson.subject}
+                          </span>
+                          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">
+                            Term {lesson.term}
+                          </span>
+                        </div>
+
+                        <h4 className="font-bold text-slate-900 text-sm leading-tight">{lesson.title}</h4>
+                        {lesson.topic && (
+                          <p className="text-xs font-semibold text-indigo-600 font-mono">
+                            Unit: {lesson.topic}
+                          </p>
+                        )}
+
+                        {lesson.contentNotes && (
+                          <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed mt-1">
+                            {lesson.contentNotes}
+                          </p>
+                        )}
+
+                        {lesson.attachmentName && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 font-mono">
+                            <Paperclip className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span className="truncate font-semibold">{lesson.attachmentName}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-200/70 flex items-center justify-between gap-2 text-xs">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          By: {lesson.teacherName}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          {lesson.contentNotes && (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewingLesson(lesson)}
+                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 shadow-2xs cursor-pointer transition-colors"
+                            >
+                              Read Notes
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadLesson(lesson)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-colors"
+                            title="Download Lesson & Study Material"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-16 text-center text-slate-400">
+                  <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                  <p className="text-sm font-bold text-slate-700">No lessons uploaded yet for {student.currentClass}</p>
+                  <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                    Your teachers will upload study materials, reading guides, and curriculum notes here for you to download.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

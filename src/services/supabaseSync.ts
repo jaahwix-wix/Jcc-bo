@@ -4,6 +4,8 @@
  */
 
 import { getSupabaseClient, testSupabaseConnection } from '../supabase';
+import { db } from '../firebase';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 /**
  * Normalizes document IDs to ensure safety across query operations.
@@ -101,6 +103,7 @@ const TABLE_MAP: Record<string, string> = {
   teachers: 'teachers',
   assignments: 'assignments',
   submissions: 'submissions',
+  lessons: 'lessons',
   announcements: 'announcements',
   class_notices: 'class_notices',
   buses: 'buses',
@@ -268,9 +271,20 @@ export async function saveToSupabase<T extends Record<string, any>>(
       }
     }
 
+    // Auto-sync to Cloud Firestore (ai-studio-jcc-e81e2154-b908-48af-ae67-3f24d94a7ce4)
+    try {
+      const docRef = doc(db, collectionName, safeDocId);
+      await setDoc(docRef, sanitizeForSupabase(payload), { merge: true });
+    } catch (e: any) {
+      console.info(`[Sync] Cloud Firestore auto-sync notice for ${collectionName}:`, e?.message);
+    }
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('sma_supabase_saved', { 
         detail: { collection: collectionName, id: safeDocId } 
+      }));
+      window.dispatchEvent(new CustomEvent('sma_data_synchronized', { 
+        detail: { collection: collectionName, id: safeDocId, timestamp: new Date().toISOString() } 
       }));
     }
 

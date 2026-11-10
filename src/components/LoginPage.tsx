@@ -168,8 +168,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       return;
     }
 
-    // Match teacher by ID, email, name, or access code
+    // Match teacher by username, ID, email, name, or access code
     const foundTeacher = registeredTeachers.find(t => 
+      (t.username && t.username.toLowerCase() === cleanUsername) ||
       t.id.toLowerCase() === cleanUsername ||
       (t.email && t.email.toLowerCase() === cleanUsername) ||
       t.name.toLowerCase() === cleanUsername ||
@@ -181,12 +182,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       return;
     }
 
-    // Validate password
+    // Validate password (checks custom teacher password or access code)
+    const enteredPass = teacherPassword.trim();
     const isPasswordCorrect = 
+      (foundTeacher.password && foundTeacher.password === enteredPass) ||
       (foundTeacher.accessCode && foundTeacher.accessCode.toUpperCase() === cleanPassword) ||
-      (foundTeacher.password && foundTeacher.password === teacherPassword.trim()) ||
-      teacherPassword.trim() === 'teacher123' ||
-      teacherPassword.trim() === 'admin123';
+      enteredPass === 'teacher123' ||
+      enteredPass === 'admin123';
 
     if (!isPasswordCorrect) {
       setErrorMsg('Incorrect password. Please verify your password with the administration.');

@@ -61,7 +61,7 @@ import {
   Cell
 } from 'recharts';
 import { Student, StudentAcademicRecord, NationalExamPrep, StudentFeeLedger, Teacher } from '../types';
-import { SCHOOL_INFO, DEMO_SAMPLE_TEACHERS } from '../initialData';
+import { SCHOOL_INFO } from '../initialData';
 import { useAuth } from '../context/AuthContext';
 import { saveAllSchoolRecordsToSupabase } from '../services/supabaseSync';
 import PrincipalsNoticeBanner from './PrincipalsNoticeBanner';

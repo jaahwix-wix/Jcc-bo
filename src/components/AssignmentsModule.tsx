@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   ClipboardList, 
   BookOpen, 
@@ -12,6 +12,8 @@ import {
   Filter, 
   Download, 
   UploadCloud, 
+  Upload,
+  Paperclip,
   CheckCircle2, 
   Clock, 
   AlertCircle, 
@@ -43,92 +45,7 @@ interface AssignmentsModuleProps {
   onNavigate?: (tab: string, arg?: any) => void;
 }
 
-const DEFAULT_INITIAL_ASSIGNMENTS: Assignment[] = [
-  {
-    id: 'asg-p4-math-01',
-    teacherId: 'tch-01',
-    teacherName: 'Mr. Alpha Sesay',
-    title: 'Long Division & Currency Word Problems',
-    description: 'Solve problems 1 through 15 on page 42 of the Sierra Leone Primary Mathematics textbook. Show all working steps clearly, including remainder calculations for Leone transactions.',
-    subject: 'Mathematics',
-    className: 'Primary 4',
-    dueDate: '2026-11-20',
-    maxPoints: 30,
-    createdAt: '2026-11-05T08:00:00.000Z',
-    attachmentName: 'Primary4_Math_Long_Division_Worksheet.pdf',
-    attachmentSize: '245 KB'
-  },
-  {
-    id: 'asg-p4-eng-02',
-    teacherId: 'tch-02',
-    teacherName: 'Mrs. Fatmata Kamara',
-    title: 'Reading Comprehension: The Bo Clock Tower Story',
-    description: 'Read the short historical passage regarding the historic landmark of Bo City and answer questions A through E in complete, grammatically sound sentences. Write a 50-word summary.',
-    subject: 'English Language',
-    className: 'Primary 4',
-    dueDate: '2026-11-18',
-    maxPoints: 25,
-    createdAt: '2026-11-06T09:30:00.000Z',
-    attachmentName: 'Bo_Heritage_Reading_Passage.txt',
-    attachmentSize: '48 KB'
-  },
-  {
-    id: 'asg-nur2-phonics-01',
-    teacherId: 'tch-03',
-    teacherName: 'Madam Mariama Bangura',
-    title: 'Letter Sounds A to M & Object Matching',
-    description: 'Practice pronouncing letter sounds from A to M. Trace the letters on your activity worksheet and match each letter with the correct picture (Apple, Ball, Cat, Drum).',
-    subject: 'Language Development & Phonics',
-    className: 'Nursery 2',
-    dueDate: '2026-11-17',
-    maxPoints: 15,
-    createdAt: '2026-11-07T10:00:00.000Z',
-    attachmentName: 'Nursery2_Letter_Tracing_Activity.pdf',
-    attachmentSize: '512 KB'
-  },
-  {
-    id: 'asg-jss2-sci-01',
-    teacherId: 'tch-04',
-    teacherName: 'Mr. Mohamed Mansaray',
-    title: 'Ecosystems & Food Chains in Sierra Leone Forests',
-    description: 'Draw and label a complete terrestrial food web consisting of at least 6 organisms found in West African rainforests. Identify the producers, primary consumers, and apex predators.',
-    subject: 'Integrated Science',
-    className: 'JSS 2',
-    dueDate: '2026-11-22',
-    maxPoints: 40,
-    createdAt: '2026-11-04T11:00:00.000Z',
-    attachmentName: 'JSS2_Rainforest_Ecosystem_Guide.pdf',
-    attachmentSize: '620 KB'
-  },
-  {
-    id: 'asg-sss2-bio-01',
-    teacherId: 'tch-05',
-    teacherName: 'Dr. S. K. Koroma',
-    title: 'Cellular Respiration & Krebs Cycle Synthesis',
-    description: 'Provide an essay comparing aerobic and anaerobic respiration in animal tissue. Include a schematic outline of glycolysis and compute the net ATP yield per mole of glucose.',
-    subject: 'Biology',
-    className: 'SSS 2',
-    dueDate: '2026-11-25',
-    maxPoints: 50,
-    createdAt: '2026-11-03T14:00:00.000Z',
-    attachmentName: 'SSS2_Cellular_Respiration_Schematic.pdf',
-    attachmentSize: '780 KB'
-  },
-  {
-    id: 'asg-sss1-math-01',
-    teacherId: 'tch-01',
-    teacherName: 'Mr. Alpha Sesay',
-    title: 'Quadratic Equations & Parabolic Graphs',
-    description: 'Solve the 8 quadratic equations using both the quadratic formula and factorisation methods. Plot equations 3 and 7 on the provided Cartesian grid paper.',
-    subject: 'Mathematics (Core)',
-    className: 'SSS 1',
-    dueDate: '2026-11-21',
-    maxPoints: 35,
-    createdAt: '2026-11-06T15:00:00.000Z',
-    attachmentName: 'SSS1_Quadratic_Equations_ProblemSet.pdf',
-    attachmentSize: '310 KB'
-  }
-];
+const DEFAULT_INITIAL_ASSIGNMENTS: Assignment[] = [];
 
 export default function AssignmentsModule({ students, onNavigate }: AssignmentsModuleProps) {
   const { user, role } = useAuth();
@@ -176,11 +93,17 @@ export default function AssignmentsModule({ students, onNavigate }: AssignmentsM
   const [newMaxPoints, setNewMaxPoints] = useState(30);
   const [newDescription, setNewDescription] = useState('');
   const [newAttachmentName, setNewAttachmentName] = useState('');
+  const [newAttachmentSize, setNewAttachmentSize] = useState('');
+  const [newAttachmentData, setNewAttachmentData] = useState('');
+  const teacherFileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State for Student Submission
   const [submitStudentId, setSubmitStudentId] = useState(currentStudent?.id || '');
   const [submitTextResponse, setSubmitTextResponse] = useState('');
   const [submitFileName, setSubmitFileName] = useState('');
+  const [submitFileSize, setSubmitFileSize] = useState('');
+  const [submitFileData, setSubmitFileData] = useState('');
+  const studentFileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State for Grading
   const [gradeScore, setGradeScore] = useState<number>(0);
@@ -192,15 +115,9 @@ export default function AssignmentsModule({ students, onNavigate }: AssignmentsM
       'assignments',
       'sma_assignments',
       (items) => {
-        if (items && items.length > 0) {
-          setAssignments(items);
-        } else {
-          // Fallback to default assignments if storage is completely empty
-          setAssignments(DEFAULT_INITIAL_ASSIGNMENTS);
-          localStorage.setItem('sma_assignments', JSON.stringify(DEFAULT_INITIAL_ASSIGNMENTS));
-        }
+        setAssignments(items || []);
       },
-      DEFAULT_INITIAL_ASSIGNMENTS
+      []
     );
 
     // Sync submissions
@@ -311,8 +228,70 @@ export default function AssignmentsModule({ students, onNavigate }: AssignmentsM
     });
   }, [assignments, selectedTier, selectedClass, selectedSubject, statusFilter, searchQuery, currentStudent, submissions]);
 
-  // Handle Download Assignment Worksheet (.txt / formatted activity sheet)
+  // Handle Teacher File Upload
+  const handleTeacherFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const sizeStr = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+    setNewAttachmentName(file.name);
+    setNewAttachmentSize(sizeStr);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setNewAttachmentData(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setToastMessage(`Selected worksheet: ${file.name} (${sizeStr})`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleClearTeacherFile = () => {
+    setNewAttachmentName('');
+    setNewAttachmentSize('');
+    setNewAttachmentData('');
+    if (teacherFileInputRef.current) teacherFileInputRef.current.value = '';
+  };
+
+  // Handle Student File Upload
+  const handleStudentFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const sizeStr = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+    setSubmitFileName(file.name);
+    setSubmitFileSize(sizeStr);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSubmitFileData(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setToastMessage(`Attached file: ${file.name} (${sizeStr})`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleClearStudentFile = () => {
+    setSubmitFileName('');
+    setSubmitFileSize('');
+    setSubmitFileData('');
+    if (studentFileInputRef.current) studentFileInputRef.current.value = '';
+  };
+
+  // Handle Download Assignment Worksheet (Direct file or formatted activity sheet)
   const handleDownloadWorksheet = (assign: Assignment) => {
+    if (assign.attachmentData) {
+      const a = document.createElement('a');
+      a.href = assign.attachmentData;
+      a.download = assign.attachmentName || `${assign.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Worksheet.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setToastMessage(`Downloaded file: ${assign.attachmentName || assign.title}`);
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
     const textContent = `
 ================================================================================
            JONATHAN'S CHILD CARE (JCC) - ACADEMIC ASSIGNMENT SHEET
@@ -358,6 +337,60 @@ STUDENT SUBMISSION INSTRUCTIONS:
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  // Download Student's Submitted Work (Document / Image / Solution Notes)
+  const handleDownloadStudentSubmission = (sub: Submission) => {
+    if (sub.fileData) {
+      const a = document.createElement('a');
+      a.href = sub.fileData;
+      a.download = sub.fileName || `${sub.studentName.replace(/[^a-zA-Z0-9_-]/g, '_')}_Submission.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setToastMessage(`Downloaded submission file: ${sub.fileName}`);
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    const textContent = `================================================================================
+           JONATHAN'S CHILD CARE (JCC) - PUPIL HOMEWORK SUBMISSION
+                    Bo District • Bo City, Sierra Leone
+================================================================================
+Student Name:     ${sub.studentName}
+Student ID:       ${sub.studentId}
+Class Level:      ${sub.className}
+Submitted At:     ${new Date(sub.submittedAt).toLocaleString()}
+Status:           ${sub.status}
+Score Awarded:    ${sub.score !== undefined ? `${sub.score} Points` : 'Pending Teacher Evaluation'}
+Attached File:    ${sub.fileName || 'Direct Solution'} (${sub.fileSize || 'Text Response'})
+================================================================================
+
+PUPIL'S ANSWERS & WORK:
+--------------------------------------------------------------------------------
+${sub.textResponse || '(Refer to uploaded document/image)'}
+
+--------------------------------------------------------------------------------
+TEACHER EVALUATION & FEEDBACK:
+--------------------------------------------------------------------------------
+${sub.feedback || 'Pending educator evaluation and grading.'}
+
+================================================================================
+    Director & Principal: Jonathan Davis • JCC Management Information System
+================================================================================`;
+
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${sub.studentName.replace(/[^a-zA-Z0-9_-]/g, '_')}_Submission.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setToastMessage(`Downloaded submission from ${sub.studentName}`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   // Handle Create Assignment
   const handleCreateAssignment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -378,7 +411,8 @@ STUDENT SUBMISSION INSTRUCTIONS:
       maxPoints: Number(newMaxPoints) || 30,
       createdAt: new Date().toISOString(),
       attachmentName: newAttachmentName.trim() || `${newSubject}_Worksheet_${newClass}.pdf`,
-      attachmentSize: '320 KB'
+      attachmentSize: newAttachmentSize || '250 KB',
+      attachmentData: newAttachmentData || undefined
     };
 
     const updated = [newAssignment, ...assignments];
@@ -392,6 +426,9 @@ STUDENT SUBMISSION INSTRUCTIONS:
     setNewTitle('');
     setNewDescription('');
     setNewAttachmentName('');
+    setNewAttachmentSize('');
+    setNewAttachmentData('');
+    if (teacherFileInputRef.current) teacherFileInputRef.current.value = '';
     setToastMessage(`Assignment "${newAssignment.title}" broadcasted to ${newAssignment.className}!`);
     setTimeout(() => setToastMessage(null), 4000);
   };
@@ -429,7 +466,8 @@ STUDENT SUBMISSION INSTRUCTIONS:
       submittedAt: new Date().toISOString(),
       textResponse: submitTextResponse.trim() || 'Homework completed and submitted via JCC Student Portal.',
       fileName: submitFileName.trim() || `${targetStudent.name.replace(/\s+/g, '_')}_Completed_Homework.pdf`,
-      fileSize: '410 KB',
+      fileSize: submitFileSize || '180 KB',
+      fileData: submitFileData || undefined,
       status: 'Pending'
     };
 
@@ -448,6 +486,9 @@ STUDENT SUBMISSION INSTRUCTIONS:
     setIsSubmitModalOpen(false);
     setSubmitTextResponse('');
     setSubmitFileName('');
+    setSubmitFileSize('');
+    setSubmitFileData('');
+    if (studentFileInputRef.current) studentFileInputRef.current.value = '';
     setActiveAssignmentForSubmission(null);
     setToastMessage(`Homework for "${activeAssignmentForSubmission.title}" submitted successfully!`);
     setTimeout(() => setToastMessage(null), 4000);
@@ -1078,16 +1119,69 @@ STUDENT SUBMISSION INSTRUCTIONS:
                 />
               </div>
 
-              {/* Optional Attachment Name */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Attachment / Worksheet Name (Optional)</label>
+              {/* Functional Teacher Worksheet Upload */}
+              <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                    <span>Upload Worksheet or Activity File (Functional)</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">PDF, Word, TXT, Images</span>
+                </div>
+
                 <input
-                  type="text"
-                  value={newAttachmentName}
-                  onChange={(e) => setNewAttachmentName(e.target.value)}
-                  placeholder="e.g., Mathematics_Workbook_Exercise.pdf"
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-medium"
+                  type="file"
+                  ref={teacherFileInputRef}
+                  onChange={handleTeacherFileUpload}
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  className="hidden"
+                  id="teacher-assignment-file-input"
                 />
+
+                {newAttachmentName ? (
+                  <div className="p-3 bg-teal-50 dark:bg-teal-950/60 rounded-xl border border-teal-200 dark:border-teal-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="p-1.5 bg-teal-600 text-white rounded-lg shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <span className="font-bold text-teal-950 dark:text-teal-200 block truncate text-xs">
+                          {newAttachmentName}
+                        </span>
+                        <span className="text-[10px] text-teal-700 dark:text-teal-400 font-mono">
+                          {newAttachmentSize || 'Attached and ready for pupils'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearTeacherFile}
+                      className="p-1 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer"
+                      title="Remove attachment"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => teacherFileInputRef.current?.click()}
+                    className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-teal-50/30 dark:hover:bg-teal-950/30"
+                  >
+                    <Upload className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span>Click to Upload Assignment File / Worksheet</span>
+                  </button>
+                )}
+
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={newAttachmentName}
+                    onChange={(e) => setNewAttachmentName(e.target.value)}
+                    placeholder="Custom attachment label (e.g. Mathematics_Workbook_Exercise.pdf)"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
@@ -1183,16 +1277,69 @@ STUDENT SUBMISSION INSTRUCTIONS:
                 />
               </div>
 
-              {/* File Attachment / Homework Photo Simulation */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Upload Homework Document / Handwritten Photo (Optional)</label>
+              {/* Functional Student Homework File Upload */}
+              <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Paperclip className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                    <span>Upload Completed Homework File or Handwritten Photo</span>
+                  </label>
+                  <span className="text-[10px] text-slate-400">PDF, Word, TXT, Images</span>
+                </div>
+
                 <input
-                  type="text"
-                  value={submitFileName}
-                  onChange={(e) => setSubmitFileName(e.target.value)}
-                  placeholder="e.g., Mathematics_Homework_Solutions.pdf or Homework_Photo.jpg"
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 font-medium"
+                  type="file"
+                  ref={studentFileInputRef}
+                  onChange={handleStudentFileUpload}
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  className="hidden"
+                  id="student-homework-file-input"
                 />
+
+                {submitFileName ? (
+                  <div className="p-3 bg-teal-50 dark:bg-teal-950/60 rounded-xl border border-teal-200 dark:border-teal-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="p-1.5 bg-teal-600 text-white rounded-lg shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="truncate">
+                        <span className="font-bold text-teal-950 dark:text-teal-200 block truncate text-xs">
+                          {submitFileName}
+                        </span>
+                        <span className="text-[10px] text-teal-700 dark:text-teal-400 font-mono">
+                          {submitFileSize || 'Ready for teacher submission'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearStudentFile}
+                      className="p-1 text-slate-400 hover:text-rose-500 rounded-lg transition-colors cursor-pointer"
+                      title="Remove uploaded file"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => studentFileInputRef.current?.click()}
+                    className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-teal-500 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-teal-50/30 dark:hover:bg-teal-950/30"
+                  >
+                    <Upload className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span>Click to Upload Homework File / Photo</span>
+                  </button>
+                )}
+
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={submitFileName}
+                    onChange={(e) => setSubmitFileName(e.target.value)}
+                    placeholder="Document or photo label (e.g. Mathematics_Homework_Solutions.pdf)"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
@@ -1284,6 +1431,25 @@ STUDENT SUBMISSION INSTRUCTIONS:
                           <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-slate-700 dark:text-slate-300">
                             {sub.textResponse}
                           </div>
+
+                          {/* Attached Pupil File & Download */}
+                          {sub.fileName && (
+                            <div className="flex items-center justify-between p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px]">
+                              <div className="flex items-center gap-2 truncate">
+                                <FileText className="w-4 h-4 text-teal-600 shrink-0" />
+                                <span className="font-bold text-teal-950 dark:text-teal-200 truncate">{sub.fileName}</span>
+                                <span className="text-slate-400 font-mono text-[10px]">({sub.fileSize || 'Attached File'})</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadStudentSubmission(sub)}
+                                className="py-1 px-3 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-[10px] flex items-center gap-1 transition-all cursor-pointer shadow-2xs shrink-0"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Download Pupil Work</span>
+                              </button>
+                            </div>
+                          )}
 
                           {/* Feedback if already graded */}
                           {sub.feedback && (

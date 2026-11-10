@@ -198,9 +198,9 @@ export default function App() {
     }
   }, [role]);
 
-  // Clean slate initialization to ensure pristine state
+  // Clean slate initialization to ensure pristine zero mock data state
   useEffect(() => {
-    const cleanKey = 'jcc_clean_slate_v16_pristine';
+    const cleanKey = 'jcc_clean_slate_v31_zero_mock_past_papers';
     if (localStorage.getItem(cleanKey) !== 'true') {
       wipeAllSystemData();
       localStorage.removeItem('jcc_authenticated_user');
@@ -898,6 +898,7 @@ export default function App() {
                     onUpdateRecord={handleUpdateRecord} 
                     onUpdateExamPrep={handleUpdateExamPrep} 
                     initialSelectedStudentId={navigationArgs?.studentId}
+                    onNavigate={handleNavigate}
                   />
                 )}
 
@@ -908,6 +909,7 @@ export default function App() {
                     records={records} 
                     initialStudentId={navigationArgs?.studentId}
                     onNavigateBack={() => handleNavigate('performance', { subTab: 'reports' })}
+                    onUpdateRecord={handleUpdateRecord}
                   />
                 )}
 

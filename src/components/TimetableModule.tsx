@@ -41,27 +41,8 @@ const PERIODS = [
   { num: 7, time: '01:45 - 02:30', label: 'Period 7' }
 ];
 
-// Seed realistic timetable slots
-const INITIAL_TIMETABLE_SLOTS: TimetableSlot[] = [
-  // Primary 1
-  { id: 'tt-1', className: 'Primary 1', dayOfWeek: 'Monday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Mathematics', teacherId: 'tch-1', teacherName: 'Mr. Alimamy Sesay', room: 'Block B - 201' },
-  { id: 'tt-2', className: 'Primary 1', dayOfWeek: 'Monday', periodNumber: 2, startTime: '09:00', endTime: '09:45', subject: 'English Language', teacherId: 'tch-2', teacherName: 'Miss Fatmata Kamara', room: 'Block B - 201' },
-  { id: 'tt-3', className: 'Primary 1', dayOfWeek: 'Monday', periodNumber: 3, startTime: '09:45', endTime: '10:30', subject: 'Integrated Science', teacherId: 'tch-3', teacherName: 'Mr. Brima Bangura', room: 'Block B - 201' },
-  { id: 'tt-4', className: 'Primary 1', dayOfWeek: 'Tuesday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Language Arts', teacherId: 'tch-2', teacherName: 'Miss Fatmata Kamara', room: 'Block B - 201' },
-  { id: 'tt-5', className: 'Primary 1', dayOfWeek: 'Wednesday', periodNumber: 2, startTime: '09:00', endTime: '09:45', subject: 'Christian Religious Studies', teacherId: 'tch-4', teacherName: 'Jonathan Davis', room: 'Block B - 201' },
-  // SSS 3
-  { id: 'tt-6', className: 'SSS 3', dayOfWeek: 'Monday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Physics', teacherId: 'tch-003', teacherName: 'Mr. Abu Bakarr Kamara', room: 'Science Lab 1' },
-  { id: 'tt-7', className: 'SSS 3', dayOfWeek: 'Monday', periodNumber: 2, startTime: '09:00', endTime: '09:45', subject: 'Chemistry', teacherId: 'tch-003', teacherName: 'Mr. Abu Bakarr Kamara', room: 'Science Lab 1' },
-  { id: 'tt-8', className: 'SSS 3', dayOfWeek: 'Monday', periodNumber: 3, startTime: '09:45', endTime: '10:30', subject: 'Mathematics', teacherId: 'tch-004', teacherName: 'Mr. Santigie Bangura', room: 'Block D - 403' },
-  { id: 'tt-9', className: 'SSS 3', dayOfWeek: 'Tuesday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'English Language', teacherId: 'tch-002', teacherName: 'Mrs. Fatmata Sesay', room: 'Block D - 403' },
-  { id: 'tt-10', className: 'SSS 3', dayOfWeek: 'Tuesday', periodNumber: 2, startTime: '09:00', endTime: '09:45', subject: 'Biology', teacherId: 'tch-003', teacherName: 'Mr. Abu Bakarr Kamara', room: 'Biology Lab' },
-  { id: 'tt-11', className: 'SSS 3', dayOfWeek: 'Wednesday', periodNumber: 4, startTime: '11:00', endTime: '11:45', subject: 'Computer Studies (ICT)', teacherId: 'tch-004', teacherName: 'Mr. Santigie Bangura', room: 'ICT Lab' },
-  { id: 'tt-12', className: 'SSS 3', dayOfWeek: 'Thursday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Christian Religious Studies', teacherId: 'tch-001', teacherName: 'Jonathan Davis', room: 'Block D - 403' },
-  // JSS 3
-  { id: 'tt-13', className: 'JSS 3', dayOfWeek: 'Monday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Integrated Science', teacherId: 'tch-003', teacherName: 'Mr. Abu Bakarr Kamara', room: 'Block C - 303' },
-  { id: 'tt-14', className: 'JSS 3', dayOfWeek: 'Tuesday', periodNumber: 2, startTime: '09:00', endTime: '09:45', subject: 'Mathematics', teacherId: 'tch-004', teacherName: 'Mr. Santigie Bangura', room: 'Block C - 303' },
-  { id: 'tt-15', className: 'JSS 3', dayOfWeek: 'Wednesday', periodNumber: 1, startTime: '08:15', endTime: '09:00', subject: 'Social Studies', teacherId: 'tch-002', teacherName: 'Mrs. Fatmata Sesay', room: 'Block C - 303' }
-];
+// Clean timetable slots
+const INITIAL_TIMETABLE_SLOTS: TimetableSlot[] = [];
 
 export default function TimetableModule({ teachers = [], onNavigate }: TimetableModuleProps) {
   const [selectedClass, setSelectedClass] = useState<StudentClass>('SSS 3');
@@ -73,7 +54,7 @@ export default function TimetableModule({ teachers = [], onNavigate }: Timetable
       const cached = localStorage.getItem('jcc_timetable_slots');
       if (cached) return JSON.parse(cached);
     } catch {}
-    return INITIAL_TIMETABLE_SLOTS;
+    return [];
   });
 
   const [isSlotModalOpen, setIsSlotModalOpen] = useState(false);

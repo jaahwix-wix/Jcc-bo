@@ -14,11 +14,13 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider, ROLE_PRIVILEGES_MAP, DEMO_PRESET_USERS, testFirestoreConnection } from '../firebase';
 import { testSupabaseConnection } from '../supabase';
 import { UserRole, RolePrivileges, AuthUser } from '../types';
+import { SCHOOL_INFO } from '../initialData';
 
 interface AuthContextType {
   user: AuthUser | null;
   role: UserRole;
   privileges: RolePrivileges;
+  rolePrivilegesMap: Record<UserRole, RolePrivileges>;
   isLoading: boolean;
   isFirebaseOnline: boolean;
   isAuthenticated: boolean;
@@ -27,6 +29,10 @@ interface AuthContextType {
   loginAs: (user: AuthUser) => void;
   switchRole: (role: UserRole) => void;
   updateUserRole: (targetUserId: string, newRole: UserRole) => Promise<void>;
+  updateRolePrivilege: (targetRole: UserRole, permission: keyof RolePrivileges, value: boolean) => void;
+  resetRolePrivileges: () => void;
+  addUserAccount: (newUser: AuthUser) => void;
+  removeUserAccount: (userId: string) => void;
   userList: AuthUser[];
   can: (permission: keyof Omit<RolePrivileges, 'role' | 'label' | 'description'>) => boolean;
   isSessionLocked: boolean;
@@ -50,23 +56,132 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirebaseOnline, setIsFirebaseOnline] = useState(false);
+
+  // Dynamic Role Privileges Matrix with persistent customization
+  const [rolePrivilegesMap, setRolePrivilegesMap] = useState<Record<UserRole, RolePrivileges>>(() => {
+    try {
+      const saved = localStorage.getItem('jcc_custom_role_privileges');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          admin: { ...ROLE_PRIVILEGES_MAP.admin, ...(parsed.admin || {}) },
+          teacher: { ...ROLE_PRIVILEGES_MAP.teacher, ...(parsed.teacher || {}) },
+          bursar: { ...ROLE_PRIVILEGES_MAP.bursar, ...(parsed.bursar || {}) },
+          transport: { ...ROLE_PRIVILEGES_MAP.transport, ...(parsed.transport || {}) },
+          student_parent: { ...ROLE_PRIVILEGES_MAP.student_parent, ...(parsed.student_parent || {}) },
+        };
+      }
+    } catch {}
+    return ROLE_PRIVILEGES_MAP;
+  });
+
+  const updateRolePrivilege = (targetRole: UserRole, permission: keyof RolePrivileges, value: boolean) => {
+    setRolePrivilegesMap(prev => {
+      const updated = {
+        ...prev,
+        [targetRole]: {
+          ...prev[targetRole],
+          [permission]: value
+        }
+      };
+      try {
+        localStorage.setItem('jcc_custom_role_privileges', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const resetRolePrivileges = () => {
+    setRolePrivilegesMap(ROLE_PRIVILEGES_MAP);
+    try {
+      localStorage.removeItem('jcc_custom_role_privileges');
+    } catch {}
+  };
   
   // Stored registry of system accounts
   const [userList, setUserList] = useState<AuthUser[]>(() => {
     const saved = localStorage.getItem('sma_user_registry');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
         console.error('Failed to parse user registry', e);
       }
     }
-    return Object.values(DEMO_PRESET_USERS);
+    // Clean default: Master Principal Admin only
+    return [DEMO_PRESET_USERS.admin];
   });
+
+  // Automatically synchronize registered teachers into userList
+  useEffect(() => {
+    const syncStaffUsers = () => {
+      try {
+        const rawTeachers = localStorage.getItem('sma_teachers');
+        if (rawTeachers) {
+          const teachers = JSON.parse(rawTeachers);
+          if (Array.isArray(teachers)) {
+            setUserList(prev => {
+              const adminAcc = prev.find(u => u.role === 'admin') || DEMO_PRESET_USERS.admin;
+              const teacherAccs: AuthUser[] = teachers.map(t => ({
+                uid: t.id,
+                email: t.email || `${t.id}@jonathanschildcare.org`,
+                displayName: `${t.name} (Faculty)`,
+                photoURL: t.profileImage || null,
+                role: 'teacher',
+                isCustomRole: true
+              }));
+              // Preserve other custom accounts
+              const otherAccounts = prev.filter(u => u.role !== 'teacher' && u.uid !== adminAcc.uid);
+              const combined = [adminAcc, ...teacherAccs, ...otherAccounts];
+              localStorage.setItem('sma_user_registry', JSON.stringify(combined));
+              return combined;
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Sync staff accounts notice:', e);
+      }
+    };
+
+    syncStaffUsers();
+    window.addEventListener('sma_teachers_updated', syncStaffUsers);
+    window.addEventListener('storage', syncStaffUsers);
+    return () => {
+      window.removeEventListener('sma_teachers_updated', syncStaffUsers);
+      window.removeEventListener('storage', syncStaffUsers);
+    };
+  }, []);
+
+  const addUserAccount = (newUser: AuthUser) => {
+    setUserList(prev => {
+      const exists = prev.some(u => u.uid === newUser.uid || (u.email && u.email === newUser.email));
+      if (exists) return prev;
+      const updated = [...prev, newUser];
+      try {
+        localStorage.setItem('sma_user_registry', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const removeUserAccount = (userId: string) => {
+    if (userId === 'system_admin_01' || userId === DEMO_PRESET_USERS.admin.uid) {
+      alert('The Master Principal / Super Administrator account cannot be deleted.');
+      return;
+    }
+    setUserList(prev => {
+      const updated = prev.filter(u => u.uid !== userId);
+      try {
+        localStorage.setItem('sma_user_registry', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
 
   // Current active role derived from user or fallback to admin
   const currentRole: UserRole = user?.role || 'admin';
-  const privileges: RolePrivileges = ROLE_PRIVILEGES_MAP[currentRole];
+  const privileges: RolePrivileges = rolePrivilegesMap[currentRole] || ROLE_PRIVILEGES_MAP[currentRole];
 
   // Helper permission check
   const can = (permission: keyof Omit<RolePrivileges, 'role' | 'label' | 'description'>): boolean => {
@@ -362,6 +477,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         role: currentRole,
         privileges,
+        rolePrivilegesMap,
+        updateRolePrivilege,
+        resetRolePrivileges,
+        addUserAccount,
+        removeUserAccount,
         isLoading,
         isFirebaseOnline,
         isAuthenticated,

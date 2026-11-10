@@ -32,6 +32,7 @@ export const DATA_STORAGE_KEYS = [
   'sma_daily_attendance',
   'sma_incidents',
   'sma_fee_sms_dispatch_log',
+  'sma_past_papers',
 ] as const;
 
 export const LIVE_MODE_INDICATOR_KEY = 'sma_live_production_active';
@@ -67,6 +68,13 @@ export function wipeAllSystemData(): void {
   localStorage.setItem('sma_daily_attendance', JSON.stringify([]));
   localStorage.setItem('sma_incidents', JSON.stringify([]));
   localStorage.setItem('sma_fee_sms_dispatch_log', JSON.stringify([]));
+
+  // Clear inventory, timetable, and notices
+  localStorage.setItem('jcc_inventory_items', JSON.stringify([]));
+  localStorage.setItem('jcc_timetable_slots', JSON.stringify([]));
+  localStorage.setItem('sma_class_notices', JSON.stringify([]));
+  localStorage.setItem('sma_notice_sms_logs', JSON.stringify([]));
+  localStorage.setItem('sma_past_papers', JSON.stringify([]));
 
   // Mark live production status
   localStorage.setItem(LIVE_MODE_INDICATOR_KEY, 'true');

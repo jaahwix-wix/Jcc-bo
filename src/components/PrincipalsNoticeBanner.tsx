@@ -25,17 +25,17 @@ import { broadcastNoticeSMS } from '../utils/smsNoticeUtils';
 
 export const DEFAULT_PRINCIPALS_NOTICE: PrincipalsNotice & { targetClass?: string; smsSentCount?: number } = {
   id: 'pn-jd-001',
-  title: 'Term 3 Executive Directive: WASSCE Candidate Clearance, CA Registers & Terminal Tuition',
-  content: 'All academic staff are instructed to finalize and submit terminal Continuous Assessment (CA) registers to the Vice Principal. Mandatory weekend revision clinics for NPSE, BECE, and WASSCE candidates are active every Saturday at 8:30 AM. Parents and guardians must settle outstanding tuition dues with the Bursary office before official terminal examination seat cards are issued.',
+  title: "Welcome to Jonathan's Child Care Management Information System",
+  content: 'Official executive communication and administrative directives from Director and Principal Jonathan Davis will be published here. Use the standard Portal login to manage academic records, tuition fees, faculty lesson plans, and student affairs.',
   author: 'Jonathan Davis',
   role: 'Director and Principal',
-  date: 'September 12, 2026',
+  date: 'Official School Portal',
   isPinned: true,
   priority: 'Official Directive',
   category: 'Executive Administration',
   lastUpdated: new Date().toISOString().split('T')[0],
   targetClass: 'All Classes',
-  smsSentCount: 96
+  smsSentCount: 0
 };
 
 interface PrincipalsNoticeBannerProps {

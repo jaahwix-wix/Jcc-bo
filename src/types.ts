@@ -207,8 +207,9 @@ export interface Teacher {
   salary: number;
   hireDate: string;
   payrollStatus: 'Paid' | 'Pending' | 'Unpaid';
+  username?: string; // Custom username for teacher portal login (e.g. j.turay)
+  password?: string; // Custom teacher portal password
   accessCode?: string; // Auto-generated code for Teacher Portal access (e.g. TCH-3918)
-  password?: string; // Custom staff password
   avatarColor?: string;
   verified?: boolean;
   verifiedBy?: string;

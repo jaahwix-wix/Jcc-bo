@@ -22,6 +22,7 @@ import {
   ClipboardList, 
   Send, 
   Eye, 
+  EyeOff,
   Award,
   Lock,
   ArrowRight,
@@ -88,6 +89,9 @@ export default function StaffManagement({ students, onNavigate }: StaffManagemen
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
+  const [formUsername, setFormUsername] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [showFormPassword, setShowFormPassword] = useState(false);
   const [formSubjects, setFormSubjects] = useState('');
   const [formClasses, setFormClasses] = useState<StudentClass[]>([]);
   const [formSalary, setFormSalary] = useState(3000000);
@@ -343,6 +347,9 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
     setFormName('');
     setFormEmail('');
     setFormPhone('');
+    setFormUsername('');
+    setFormPassword('');
+    setShowFormPassword(false);
     setFormSubjects('');
     setFormClasses(['Primary 1']);
     setFormSalary(3500000);
@@ -357,6 +364,9 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
     setFormName(t.name);
     setFormEmail(t.email);
     setFormPhone(t.phone);
+    setFormUsername(t.username || t.email.split('@')[0] || '');
+    setFormPassword(t.password || t.accessCode || '');
+    setShowFormPassword(false);
     setFormSubjects(t.subjects.join(', '));
     setFormClasses(t.classes);
     setFormSalary(t.salary);
@@ -369,6 +379,8 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
   const handleTeacherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const subList = formSubjects.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const generatedUsername = formUsername.trim().toLowerCase() || formEmail.split('@')[0].toLowerCase() || formName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const generatedPassword = formPassword.trim() || 'teacher123';
     
     if (editingTeacher) {
       const isNowVerified = canVerify ? formVerified : !!editingTeacher.verified;
@@ -377,6 +389,8 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
         name: formName,
         email: formEmail,
         phone: formPhone,
+        username: formUsername.trim().toLowerCase() || editingTeacher.username || generatedUsername,
+        password: formPassword.trim() || editingTeacher.password || generatedPassword,
         accessCode: editingTeacher.accessCode || generateTeacherCode(),
         subjects: subList,
         classes: formClasses,
@@ -397,6 +411,8 @@ ${sub.feedback || 'Pending educator grading and remarks.'}
         name: formName,
         email: formEmail,
         phone: formPhone,
+        username: generatedUsername,
+        password: generatedPassword,
         accessCode: generateTeacherCode(),
         subjects: subList,
         classes: formClasses,
@@ -805,6 +821,21 @@ ${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
                                 <Copy className="w-3 h-3" />
                               )}
                             </button>
+
+                            {/* Teacher Portal Username & Password */}
+                            {teacher.username ? (
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center gap-1" title="Teacher Portal Username">
+                                <User className="w-2.5 h-2.5 text-indigo-600" />
+                                User: {teacher.username}
+                              </span>
+                            ) : null}
+
+                            {teacher.password ? (
+                              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1" title="Teacher Portal Password">
+                                <Lock className="w-2.5 h-2.5 text-amber-600" />
+                                Pass: {teacher.password}
+                              </span>
+                            ) : null}
 
                             {/* System-Generated Portal Access Code */}
                             <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
@@ -1488,6 +1519,62 @@ ${SCHOOL_INFO.name} - ${SCHOOL_INFO.address}
                     className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 text-slate-700 font-mono"
                   />
                 </div>
+              </div>
+
+              {/* Explicit Teacher Portal Login Credentials */}
+              <div className="p-3.5 bg-indigo-50/70 border border-indigo-200/80 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-indigo-900 tracking-wider flex items-center gap-1.5">
+                    <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
+                    Teacher Portal Credentials (Required for Login)
+                  </span>
+                  <span className="text-[9px] font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md">
+                    Portal Login
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                      Teacher Username <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formUsername}
+                      onChange={(e) => setFormUsername(e.target.value)}
+                      placeholder="e.g. mr.sesay or j.turay"
+                      className="w-full px-3 py-2 border border-indigo-200 bg-white rounded-xl text-xs font-mono font-bold focus:outline-none focus:border-indigo-500 text-slate-800"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                      Teacher Password <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showFormPassword ? 'text' : 'password'}
+                        required
+                        value={formPassword}
+                        onChange={(e) => setFormPassword(e.target.value)}
+                        placeholder="e.g. sesay2026!"
+                        className="w-full px-3 py-2 pr-8 border border-indigo-200 bg-white rounded-xl text-xs font-mono font-bold focus:outline-none focus:border-indigo-500 text-slate-800"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowFormPassword(!showFormPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        title={showFormPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showFormPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10px] text-indigo-700 leading-tight">
+                  The educator will enter this <strong>Username</strong> and <strong>Password</strong> at the JCC Portal Login page to access their assigned students, post lessons, and assign coursework.
+                </p>
               </div>
 
               <div className="space-y-1">

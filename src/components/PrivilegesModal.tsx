@@ -20,10 +20,14 @@ import {
   CreditCard, 
   Bus, 
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Trash2,
+  RotateCcw,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { UserRole } from '../types';
+import { UserRole, RolePrivileges, AuthUser } from '../types';
 import { ROLE_PRIVILEGES_MAP } from '../firebase';
 import { SCHOOL_INFO } from '../initialData';
 import { motion } from 'motion/react';
@@ -38,6 +42,11 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
     user, 
     role, 
     privileges, 
+    rolePrivilegesMap,
+    updateRolePrivilege,
+    resetRolePrivileges,
+    addUserAccount,
+    removeUserAccount,
     signInWithGoogle, 
     signOutUser, 
     switchRole, 
@@ -48,6 +57,39 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
   } = useAuth();
 
   const [activeSubTab, setActiveSubTab] = useState<'matrix' | 'users'>('matrix');
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+
+  // New user account form state
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserRole, setNewUserRole] = useState<UserRole>('teacher');
+
+  const showFeedback = (msg: string) => {
+    setFeedbackMsg(msg);
+    setTimeout(() => setFeedbackMsg(null), 3000);
+  };
+
+  const handleCreateAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserName.trim()) return;
+
+    const newAcc: AuthUser = {
+      uid: `usr-${Date.now()}`,
+      email: newUserEmail.trim() || `${newUserName.toLowerCase().replace(/\s+/g, '.')}@jonathanschildcare.org`,
+      displayName: newUserName.trim(),
+      photoURL: null,
+      role: newUserRole,
+      isCustomRole: true
+    };
+
+    addUserAccount(newAcc);
+    setNewUserName('');
+    setNewUserEmail('');
+    setNewUserRole('teacher');
+    setIsAddUserOpen(false);
+    showFeedback(`Account created for ${newAcc.displayName} (${newAcc.role})`);
+  };
 
   if (!isOpen) return null;
 
@@ -94,12 +136,14 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
     }
   ];
 
-  const permissionKeys: { key: keyof typeof privileges; label: string; module: string }[] = [
+  const permissionKeys: { key: keyof RolePrivileges; label: string; module: string }[] = [
     { key: 'canViewDashboard', label: 'Executive Dashboard & KPI Metrics', module: 'Dashboard' },
     { key: 'canViewStudents', label: 'Student Directory & ID Card Generation', module: 'Students' },
     { key: 'canManageStudents', label: 'Register / Edit / Delete Student Files', module: 'Students' },
     { key: 'canTakeAttendance', label: 'Daily Attendance & Absence Logging', module: 'Attendance' },
     { key: 'canManageDiscipline', label: 'Incident & Disciplinary Action Logging', module: 'Discipline' },
+    { key: 'canViewAssignments', label: 'Assignments & Coursework Hub (Nursery-SSS)', module: 'Assignments' },
+    { key: 'canViewPastPapers', label: 'NPSE, BECE & WASSCE Past Exam Archive', module: 'Past Papers' },
     { key: 'canViewAcademics', label: 'Academic Portal & Grade Inspection', module: 'Academics' },
     { key: 'canManageAcademics', label: 'Enter Continuous Assessment & Exam Marks', module: 'Academics' },
     { key: 'canGenerateReportCards', label: 'Generate & Print Terminal Report Cards', module: 'Reports' },
@@ -290,20 +334,61 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {/* Feedback Toast */}
+          {feedbackMsg && (
+            <div className="mb-4 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300 font-semibold animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{feedbackMsg}</span>
+              </div>
+              <button onClick={() => setFeedbackMsg(null)} className="text-emerald-600 hover:text-emerald-800 cursor-pointer">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {activeSubTab === 'matrix' ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">Active Role Permissions</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{privileges.description}</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Role-Based Access Control (RBAC) Matrix</span>
+                    {can('canManageUserRoles') && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300">
+                        Interactive Tuning Active
+                      </span>
+                    )}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {can('canManageUserRoles') 
+                      ? 'As Super Administrator, you can click on any permission cell below to toggle and customize privileges in real-time.' 
+                      : privileges.description}
+                  </p>
                 </div>
-                <div className="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                  Current: <strong className="text-indigo-600 dark:text-indigo-400">{role.toUpperCase()}</strong>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {can('canManageUserRoles') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetRolePrivileges();
+                        showFeedback('Privileges reset to official default matrix');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Reset all role permissions to standard default"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Reset Defaults</span>
+                    </button>
+                  )}
+                  <div className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                    Current View: <strong>{role.toUpperCase()}</strong>
+                  </div>
                 </div>
               </div>
 
               {/* Matrix Table */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
@@ -329,20 +414,38 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
                             <span className="text-[10px] text-slate-400 uppercase font-medium">{p.module}</span>
                           </td>
                           {(['admin', 'teacher', 'bursar', 'transport', 'student_parent'] as UserRole[]).map(r => {
-                            const isAllowed = Boolean(ROLE_PRIVILEGES_MAP[r][p.key]);
+                            const isAllowed = Boolean(rolePrivilegesMap[r]?.[p.key]);
                             const isCurrent = role === r;
+                            const canToggle = can('canManageUserRoles');
+
                             return (
                               <td 
                                 key={r} 
-                                className={`p-3 text-center ${isCurrent ? 'bg-indigo-50/50 dark:bg-indigo-950/20 font-bold' : ''}`}
+                                className={`p-2.5 text-center ${isCurrent ? 'bg-indigo-50/50 dark:bg-indigo-950/20 font-bold' : ''}`}
                               >
-                                {isAllowed ? (
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 mx-auto">
-                                    <Check className="w-3.5 h-3.5" />
-                                  </span>
+                                {canToggle ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      updateRolePrivilege(r, p.key, !isAllowed);
+                                      showFeedback(`${p.label} for ${r} is now ${!isAllowed ? 'ENABLED' : 'DISABLED'}`);
+                                    }}
+                                    title={`Click to ${isAllowed ? 'revoke' : 'grant'} ${p.label} for ${r}`}
+                                    className={`inline-flex items-center justify-center w-7 h-7 rounded-xl transition-all cursor-pointer border ${
+                                      isAllowed 
+                                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800' 
+                                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700'
+                                    }`}
+                                  >
+                                    {isAllowed ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                                  </button>
                                 ) : (
-                                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 mx-auto">
-                                    <X className="w-3.5 h-3.5" />
+                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full mx-auto ${
+                                    isAllowed 
+                                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' 
+                                      : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
+                                  }`}>
+                                    {isAllowed ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                                   </span>
                                 )}
                               </td>
@@ -358,16 +461,25 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
           ) : (
             /* User Accounts Tab */
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">Registered Users & Role Allocations</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {can('canManageUserRoles') 
-                      ? 'As Super Administrator, you can promote or alter role privileges for any user account.' 
+                      ? 'As Super Administrator, you can promote, alter role privileges, or provision new faculty and staff accounts.' 
                       : 'You need Super Administrator privileges to reassign user roles.'}
                   </p>
                 </div>
-                {!can('canManageUserRoles') && (
+                {can('canManageUserRoles') ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddUserOpen(!isAddUserOpen)}
+                    className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add User Account</span>
+                  </button>
+                ) : (
                   <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
                     <Lock className="w-3.5 h-3.5" />
                     <span>Role Editing Locked</span>
@@ -375,9 +487,84 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
                 )}
               </div>
 
+              {/* Add User Account Drawer/Card */}
+              {isAddUserOpen && (
+                <form 
+                  onSubmit={handleCreateAccount}
+                  className="p-4 bg-indigo-50/70 dark:bg-slate-800/80 rounded-2xl border border-indigo-200 dark:border-slate-700 space-y-3 animate-in fade-in slide-in-from-top-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300">Create New Authorized User Account</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsAddUserOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Full Name *</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={newUserName}
+                        onChange={(e) => setNewUserName(e.target.value)}
+                        placeholder="e.g. Mr. Sorie Koroma"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Email / Username</label>
+                      <input 
+                        type="text" 
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                        placeholder="e.g. s.koroma@jonathanschildcare.org"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Assigned Role</label>
+                      <select
+                        value={newUserRole}
+                        onChange={(e) => setNewUserRole(e.target.value as UserRole)}
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold"
+                      >
+                        <option value="teacher">Academic Teacher</option>
+                        <option value="bursar">School Bursar</option>
+                        <option value="transport">Transport Coordinator</option>
+                        <option value="admin">Administrator</option>
+                        <option value="student_parent">Student / Guardian</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddUserOpen(false)}
+                      className="px-3 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs"
+                    >
+                      Save Account
+                    </button>
+                  </div>
+                </form>
+              )}
+
               <div className="space-y-2.5">
                 {userList.map(u => {
                   const isCurrentUser = user?.uid === u.uid;
+                  const isMasterAdmin = u.uid === 'system_admin_01' || u.role === 'admin';
+
                   return (
                     <div 
                       key={u.uid}
@@ -402,20 +589,41 @@ export default function PrivilegesModal({ isOpen, onClose }: PrivilegesModalProp
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <label className="text-xs text-slate-500">Role:</label>
-                        <select
-                          disabled={!can('canManageUserRoles')}
-                          value={u.role}
-                          onChange={(e) => updateUserRole(u.uid, e.target.value as UserRole)}
-                          className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                          <option value="admin">Super Admin / Principal</option>
-                          <option value="teacher">Senior Teacher</option>
-                          <option value="bursar">School Bursar</option>
-                          <option value="transport">Fleet Officer</option>
-                          <option value="student_parent">Student / Parent</option>
-                        </select>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-slate-500 font-medium">Role:</label>
+                          <select
+                            disabled={!can('canManageUserRoles')}
+                            value={u.role}
+                            onChange={(e) => {
+                              updateUserRole(u.uid, e.target.value as UserRole);
+                              showFeedback(`Role for ${u.displayName} changed to ${e.target.value}`);
+                            }}
+                            className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            <option value="admin">Super Admin / Principal</option>
+                            <option value="teacher">Academic Teacher</option>
+                            <option value="bursar">School Bursar</option>
+                            <option value="transport">Fleet Officer</option>
+                            <option value="student_parent">Student / Parent</option>
+                          </select>
+                        </div>
+
+                        {can('canManageUserRoles') && !isMasterAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Delete user account "${u.displayName || u.email}"?`)) {
+                                removeUserAccount(u.uid);
+                                showFeedback(`Account for ${u.displayName} removed`);
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            title="Remove Account"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

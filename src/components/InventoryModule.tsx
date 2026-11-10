@@ -30,19 +30,7 @@ interface InventoryModuleProps {
   onNavigate?: (tab: string, arg?: any) => void;
 }
 
-const DEFAULT_INVENTORY_ITEMS: InventoryItem[] = [
-  { id: 'inv-1', itemCode: 'JCC-TXT-001', name: 'WAEC Standard Senior Secondary Mathematics Books (Grade 10-12)', category: 'Books & Curricula', quantity: 120, unit: 'Copies', condition: 'Good', location: 'Main Library - Shelf 4', unitValueSLE: 180, status: 'In Stock' },
-  { id: 'inv-2', itemCode: 'JCC-TXT-002', name: 'Primary English Gateway Comprehension & Grammar Course', category: 'Books & Curricula', quantity: 200, unit: 'Copies', condition: 'Excellent', location: 'Junior Library', unitValueSLE: 120, status: 'In Stock' },
-  { id: 'inv-3', itemCode: 'JCC-FUR-101', name: 'Dual Student Wooden Desks with Attached Bench', category: 'Classroom Furniture', quantity: 85, unit: 'Sets', condition: 'Good', location: 'Primary Block B & JSS Block C', unitValueSLE: 450, status: 'Allocated' },
-  { id: 'inv-4', itemCode: 'JCC-FUR-102', name: 'Teacher Executive Wooden Pedestal Desk & Swivel Chair', category: 'Classroom Furniture', quantity: 18, unit: 'Sets', condition: 'Good', location: 'Staff Rooms & Classrooms', unitValueSLE: 1200, status: 'Allocated' },
-  { id: 'inv-5', itemCode: 'JCC-FUR-103', name: 'Magnetic Wall-Mount Dry-Erase Whiteboards (4x8 ft)', category: 'Classroom Furniture', quantity: 16, unit: 'Boards', condition: 'Excellent', location: 'All Classrooms', unitValueSLE: 850, status: 'Allocated' },
-  { id: 'inv-6', itemCode: 'JCC-SCI-201', name: 'Student Optical Monocular Microscopes (400x Magnification)', category: 'Science & ICT Equipment', quantity: 12, unit: 'Units', condition: 'Good', location: 'Senior Science Laboratory', unitValueSLE: 2500, status: 'In Stock' },
-  { id: 'inv-7', itemCode: 'JCC-ICT-202', name: 'Core i5 Student Desktop Workstations with LED Monitors', category: 'Science & ICT Equipment', quantity: 24, unit: 'Stations', condition: 'Good', location: 'ICT Innovation Lab', unitValueSLE: 5500, status: 'In Stock' },
-  { id: 'inv-8', itemCode: 'JCC-ICT-203', name: 'Heavy-Duty Workgroup Network Laser Printer & Copier', category: 'Science & ICT Equipment', quantity: 2, unit: 'Printers', condition: 'Excellent', location: 'Administration Office', unitValueSLE: 9800, status: 'Allocated' },
-  { id: 'inv-9', itemCode: 'JCC-SPT-301', name: 'FIFA Standard Match Footballs & Training Cones Kit', category: 'Sports & Facilities', quantity: 25, unit: 'Balls/Kits', condition: 'Good', location: 'Sports Store Room', unitValueSLE: 150, status: 'In Stock' },
-  { id: 'inv-10', itemCode: 'JCC-SPT-302', name: 'School Inter-House Athletics Running Track Equipment', category: 'Sports & Facilities', quantity: 1, unit: 'Set', condition: 'Good', location: 'Sports Store Room', unitValueSLE: 3200, status: 'In Stock' },
-  { id: 'inv-11', itemCode: 'JCC-ADM-401', name: 'Yamaha 8.5 KVA Backup Diesel Generator for Campus Power', category: 'Administrative Assets', quantity: 1, unit: 'Generator', condition: 'Good', location: 'Generator House', unitValueSLE: 24000, status: 'Allocated' }
-];
+const DEFAULT_INVENTORY_ITEMS: InventoryItem[] = [];
 
 export default function InventoryModule({ onNavigate }: InventoryModuleProps) {
   const [items, setItems] = useState<InventoryItem[]>(() => {
@@ -50,7 +38,7 @@ export default function InventoryModule({ onNavigate }: InventoryModuleProps) {
       const cached = localStorage.getItem('jcc_inventory_items');
       if (cached) return JSON.parse(cached);
     } catch {}
-    return DEFAULT_INVENTORY_ITEMS;
+    return [];
   });
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');

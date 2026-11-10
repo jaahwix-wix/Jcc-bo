@@ -33,27 +33,27 @@ interface ClassManagementProps {
   onNavigate?: (tab: string, arg?: any) => void;
 }
 
-// Initial default class records
+// Initial default class records (Class teachers assigned when registered by Admin)
 const DEFAULT_CLASS_RECORDS: SchoolClassRecord[] = [
   // Nursery
-  { name: 'Nursery 1', tier: 'Nursery', room: 'Block A - Room 101', capacity: 30, classTeacherName: 'Mrs. Mariama Turay' },
-  { name: 'Nursery 2', tier: 'Nursery', room: 'Block A - Room 102', capacity: 30, classTeacherName: 'Miss Zainab Conteh' },
-  { name: 'Nursery 3', tier: 'Nursery', room: 'Block A - Room 103', capacity: 30, classTeacherName: 'Mrs. Hawa Mansaray' },
+  { name: 'Nursery 1', tier: 'Nursery', room: 'Block A - Room 101', capacity: 30, classTeacherName: '' },
+  { name: 'Nursery 2', tier: 'Nursery', room: 'Block A - Room 102', capacity: 30, classTeacherName: '' },
+  { name: 'Nursery 3', tier: 'Nursery', room: 'Block A - Room 103', capacity: 30, classTeacherName: '' },
   // Primary
-  { name: 'Primary 1', tier: 'Primary', room: 'Block B - Room 201', capacity: 35, classTeacherName: 'Mr. Alimamy Sesay' },
-  { name: 'Primary 2', tier: 'Primary', room: 'Block B - Room 202', capacity: 35, classTeacherName: 'Miss Fatmata Kamara' },
-  { name: 'Primary 3', tier: 'Primary', room: 'Block B - Room 203', capacity: 35, classTeacherName: 'Mr. Brima Bangura' },
-  { name: 'Primary 4', tier: 'Primary', room: 'Block B - Room 204', capacity: 35, classTeacherName: 'Mrs. Isatu Koroma' },
-  { name: 'Primary 5', tier: 'Primary', room: 'Block B - Room 205', capacity: 35, classTeacherName: 'Mr. Sorie Jalloh' },
-  { name: 'Primary 6', tier: 'Primary', room: 'Block B - Room 206', capacity: 40, classTeacherName: 'Mr. Mohamed Koroma' },
+  { name: 'Primary 1', tier: 'Primary', room: 'Block B - Room 201', capacity: 35, classTeacherName: '' },
+  { name: 'Primary 2', tier: 'Primary', room: 'Block B - Room 202', capacity: 35, classTeacherName: '' },
+  { name: 'Primary 3', tier: 'Primary', room: 'Block B - Room 203', capacity: 35, classTeacherName: '' },
+  { name: 'Primary 4', tier: 'Primary', room: 'Block B - Room 204', capacity: 35, classTeacherName: '' },
+  { name: 'Primary 5', tier: 'Primary', room: 'Block B - Room 205', capacity: 35, classTeacherName: '' },
+  { name: 'Primary 6', tier: 'Primary', room: 'Block B - Room 206', capacity: 40, classTeacherName: '' },
   // JSS
-  { name: 'JSS 1', tier: 'JSS', room: 'Block C - Room 301', capacity: 40, classTeacherName: 'Mr. Santigie Bangura' },
-  { name: 'JSS 2', tier: 'JSS', room: 'Block C - Room 302', capacity: 40, classTeacherName: 'Mrs. Mariama Bangura' },
-  { name: 'JSS 3', tier: 'JSS', room: 'Block C - Room 303', capacity: 40, classTeacherName: 'Mr. Abu Bakarr Kamara' },
+  { name: 'JSS 1', tier: 'JSS', room: 'Block C - Room 301', capacity: 40, classTeacherName: '' },
+  { name: 'JSS 2', tier: 'JSS', room: 'Block C - Room 302', capacity: 40, classTeacherName: '' },
+  { name: 'JSS 3', tier: 'JSS', room: 'Block C - Room 303', capacity: 40, classTeacherName: '' },
   // SSS
-  { name: 'SSS 1', tier: 'SSS', room: 'Block D - Room 401', capacity: 40, classTeacherName: 'Mrs. Fatmata Sesay' },
-  { name: 'SSS 2', tier: 'SSS', room: 'Block D - Room 402', capacity: 40, classTeacherName: 'Mr. Osman Fofanah' },
-  { name: 'SSS 3', tier: 'SSS', room: 'Block D - Room 403', capacity: 40, classTeacherName: 'Jonathan Davis' },
+  { name: 'SSS 1', tier: 'SSS', room: 'Block D - Room 401', capacity: 40, classTeacherName: '' },
+  { name: 'SSS 2', tier: 'SSS', room: 'Block D - Room 402', capacity: 40, classTeacherName: '' },
+  { name: 'SSS 3', tier: 'SSS', room: 'Block D - Room 403', capacity: 40, classTeacherName: '' },
 ];
 
 export default function ClassManagement({ students, teachers = [], onNavigate }: ClassManagementProps) {

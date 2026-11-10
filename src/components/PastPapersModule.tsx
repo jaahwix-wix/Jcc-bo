@@ -21,6 +21,7 @@ import {
   FileText, 
   ChevronRight, 
   ArrowRight, 
+  ArrowLeft,
   AlertCircle, 
   Check, 
   HelpCircle, 
@@ -39,475 +40,8 @@ interface PastPapersModuleProps {
   onNavigate?: (tab: string, arg?: any) => void;
 }
 
-// Initial Comprehensive Past Papers Archive (NPSE, BECE, WASSCE)
-const INITIAL_PAST_PAPERS: PastPaper[] = [
-  // --- NPSE (PRIMARY 6) ---
-  {
-    id: 'pp-npse-2024-math',
-    examType: 'NPSE',
-    year: 2024,
-    subject: 'Mathematics',
-    paperCode: 'NPSE-2024-MATH-01',
-    paperTitle: 'NPSE 2024 Mathematics Objective & Problem Solving',
-    paperType: 'Paper 1 (Objectives)',
-    durationMinutes: 60,
-    totalMarks: 50,
-    instructions: 'Answer all 50 multiple choice questions. Choose the correct letter from A, B, C, or D. No calculators permitted.',
-    questionsCount: 50,
-    downloadFileName: 'NPSE_2024_Mathematics_Paper1.txt',
-    fileSize: '142 KB',
-    uploadedBy: 'MBSSE / WAEC Bo Directorate',
-    uploadedAt: '2026-05-10',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-npse-m-1',
-        number: 1,
-        question: 'Express 3/8 as a decimal number.',
-        options: ['0.375', '0.380', '0.350', '0.425'],
-        correctOption: 0,
-        markingGuide: '3 ÷ 8 = 0.375. Divide 3.000 by 8 to get 0.375.',
-        points: 1
-      },
-      {
-        id: 'q-npse-m-2',
-        number: 2,
-        question: 'A trader in Bo City bought a bag of rice for SLE 450 and sold it for SLE 540. What was her percentage profit?',
-        options: ['15%', '20%', '25%', '18%'],
-        correctOption: 1,
-        markingGuide: 'Profit = 540 - 450 = SLE 90. Percentage profit = (90 / 450) * 100 = 20%.',
-        points: 1
-      },
-      {
-        id: 'q-npse-m-3',
-        number: 3,
-        question: 'Find the Least Common Multiple (LCM) of 12, 18, and 24.',
-        options: ['48', '72', '96', '36'],
-        correctOption: 1,
-        markingGuide: '12 = 2² * 3; 18 = 2 * 3²; 24 = 2³ * 3. LCM = 2³ * 3² = 8 * 9 = 72.',
-        points: 1
-      },
-      {
-        id: 'q-npse-m-4',
-        number: 4,
-        question: 'Calculate the perimeter of a rectangular school field measuring 65 meters long and 35 meters wide.',
-        options: ['100 meters', '200 meters', '2,275 meters', '130 meters'],
-        correctOption: 1,
-        markingGuide: 'Perimeter = 2 * (length + width) = 2 * (65 + 35) = 2 * 100 = 200 meters.',
-        points: 1
-      },
-      {
-        id: 'q-npse-m-5',
-        number: 5,
-        question: 'Solve for x in the equation: 4x - 7 = 29.',
-        options: ['7', '8', '9', '11'],
-        correctOption: 2,
-        markingGuide: '4x = 29 + 7 = 36. x = 36 / 4 = 9.',
-        points: 1
-      }
-    ]
-  },
-  {
-    id: 'pp-npse-2023-quant',
-    examType: 'NPSE',
-    year: 2023,
-    subject: 'Quantitative Aptitude',
-    paperCode: 'NPSE-2023-QA-01',
-    paperTitle: 'NPSE 2023 Quantitative Aptitude & Numerical Reasoning',
-    paperType: 'Paper 1 (Objectives)',
-    durationMinutes: 50,
-    totalMarks: 50,
-    instructions: 'Examine each numerical pattern carefully. Select the number that completes the relationship logically.',
-    questionsCount: 50,
-    downloadFileName: 'NPSE_2023_Quantitative_Aptitude.txt',
-    fileSize: '120 KB',
-    uploadedBy: 'JCC Academic Committee',
-    uploadedAt: '2026-04-12',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-npse-qa-1',
-        number: 1,
-        question: 'If [4 * 6] = 20 and [5 * 7] = 30, find the value of [6 * 8].',
-        options: ['38', '40', '42', '48'],
-        correctOption: 2,
-        markingGuide: 'Rule: (a * b) - 4. 4*6=24-4=20; 5*7=35-5? Or (a-1)*b? Notice 4*(6-1)=20; 5*(7-1)=30. Thus 6*(8-1) = 6 * 7 = 42.',
-        points: 1
-      },
-      {
-        id: 'q-npse-qa-2',
-        number: 2,
-        question: 'Identify the next number in the series: 3, 7, 15, 31, 63, ...',
-        options: ['125', '126', '127', '128'],
-        correctOption: 2,
-        markingGuide: 'Each term is (previous * 2) + 1. (63 * 2) + 1 = 126 + 1 = 127.',
-        points: 1
-      }
-    ]
-  },
-  {
-    id: 'pp-npse-2024-eng',
-    examType: 'NPSE',
-    year: 2024,
-    subject: 'English Language',
-    paperCode: 'NPSE-2024-ENG-01',
-    paperTitle: 'NPSE 2024 English Language, Verbal Aptitude & Composition',
-    paperType: 'Paper 1 (Objectives)',
-    durationMinutes: 60,
-    totalMarks: 50,
-    instructions: 'Read the comprehension passage and answer questions 1 to 10. For questions 11 to 50, select the most appropriate grammatical option.',
-    questionsCount: 50,
-    downloadFileName: 'NPSE_2024_English_Verbal.txt',
-    fileSize: '135 KB',
-    uploadedBy: 'MBSSE Bo District',
-    uploadedAt: '2026-05-14',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-npse-e-1',
-        number: 1,
-        question: 'Choose the word that is nearest in meaning (synonym) to "ABUNDANT".',
-        options: ['Scarce', 'Plentiful', 'Empty', 'Sufficient'],
-        correctOption: 1,
-        markingGuide: 'Abundant means existing in large quantities; plentiful.',
-        points: 1
-      },
-      {
-        id: 'q-npse-e-2',
-        number: 2,
-        question: 'Neither the headteacher nor the pupils ______ present at the assembly hall.',
-        options: ['was', 'were', 'is', 'are being'],
-        correctOption: 1,
-        markingGuide: 'With "neither... nor", the verb agrees with the closer subject ("pupils", which is plural), so "were" is correct.',
-        points: 1
-      }
-    ]
-  },
-
-  // --- BECE (JSS 3) ---
-  {
-    id: 'pp-bece-2024-sci',
-    examType: 'BECE',
-    year: 2024,
-    subject: 'Integrated Science',
-    paperCode: 'WAEC-BECE-2024-SCI-1&2',
-    paperTitle: 'BECE 2024 Integrated Science (Paper 1 Objectives & Paper 2 Essay)',
-    paperType: 'Combined',
-    durationMinutes: 120,
-    totalMarks: 100,
-    instructions: 'Section A: 50 Objective Questions (50 Marks). Section B: Answer any four out of five structured essay questions (50 Marks).',
-    questionsCount: 54,
-    downloadFileName: 'BECE_2024_Integrated_Science.txt',
-    fileSize: '210 KB',
-    uploadedBy: 'WAEC Sierra Leone',
-    uploadedAt: '2026-06-02',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-bece-s-1',
-        number: 1,
-        question: 'Which of the following gas components is absorbed by green leaves during photosynthesis?',
-        options: ['Oxygen', 'Carbon dioxide', 'Nitrogen', 'Hydrogen'],
-        correctOption: 1,
-        markingGuide: 'Photosynthesis requires Carbon dioxide (CO₂) and water in the presence of sunlight and chlorophyll to produce glucose.',
-        points: 1
-      },
-      {
-        id: 'q-bece-s-2',
-        number: 2,
-        question: 'An electric bulb draws a current of 0.5 Amperes when connected to a 240 Volts mains supply. Calculate the resistance of the bulb filament.',
-        options: ['120 Ohms', '240 Ohms', '480 Ohms', '60 Ohms'],
-        correctOption: 2,
-        markingGuide: 'By Ohm’s Law: V = I * R => R = V / I = 240 / 0.5 = 480 Ohms.',
-        points: 2
-      },
-      {
-        id: 'q-bece-s-3',
-        number: 3,
-        question: 'Which method of soil conservation involves planting crops along horizontal contour lines of hillsides in Bo District?',
-        options: ['Crop rotation', 'Contour plowing', 'Mulching', 'Overgrazing'],
-        correctOption: 1,
-        markingGuide: 'Contour plowing reduces water runoff and soil erosion across slopes.',
-        points: 1
-      }
-    ]
-  },
-  {
-    id: 'pp-bece-2023-math',
-    examType: 'BECE',
-    year: 2023,
-    subject: 'Mathematics',
-    paperCode: 'WAEC-BECE-2023-MATH-1&2',
-    paperTitle: 'BECE 2023 Mathematics (Paper 1 & Paper 2 Theory)',
-    paperType: 'Combined',
-    durationMinutes: 120,
-    totalMarks: 100,
-    instructions: 'Paper 1 consists of 50 Multiple Choice Questions (50 marks). Paper 2 consists of 6 structured questions (Answer 4 questions for 50 marks).',
-    questionsCount: 56,
-    downloadFileName: 'BECE_2023_Mathematics_Full.txt',
-    fileSize: '195 KB',
-    uploadedBy: 'WAEC Sierra Leone',
-    uploadedAt: '2026-06-05',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-bece-m-1',
-        number: 1,
-        question: 'Factorize completely: 6x² - 15xy.',
-        options: ['3x(2x - 5y)', '3(2x² - 5xy)', 'x(6x - 15y)', '3x(2x + 5y)'],
-        correctOption: 0,
-        markingGuide: 'Factor out the greatest common factor 3x: 3x(2x - 5y).',
-        points: 1
-      },
-      {
-        id: 'q-bece-m-2',
-        number: 2,
-        question: 'If the interior angle of a regular polygon is 140°, how many sides does the polygon possess?',
-        options: ['7 sides', '8 sides', '9 sides', '10 sides'],
-        correctOption: 2,
-        markingGuide: 'Exterior angle = 180° - 140° = 40°. Number of sides n = 360° / 40° = 9 sides (Nonagon).',
-        points: 2
-      }
-    ]
-  },
-  {
-    id: 'pp-bece-2024-eng',
-    examType: 'BECE',
-    year: 2024,
-    subject: 'Language Arts (English)',
-    paperCode: 'WAEC-BECE-2024-ENG-1&2',
-    paperTitle: 'BECE 2024 Language Arts (English Comprehension, Grammar & Composition)',
-    paperType: 'Combined',
-    durationMinutes: 120,
-    totalMarks: 100,
-    instructions: 'Write an essay of about 250 words on one of the given topics. Answer all comprehension and vocabulary questions.',
-    questionsCount: 52,
-    downloadFileName: 'BECE_2024_Language_Arts.txt',
-    fileSize: '188 KB',
-    uploadedBy: 'WAEC Sierra Leone',
-    uploadedAt: '2026-06-08',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-bece-e-1',
-        number: 1,
-        question: 'Select the sentence that contains the correct punctuation.',
-        options: [
-          'Although he worked hard, he did not win the prize.',
-          'Although he worked hard; he did not win the prize.',
-          'Although he worked hard he did not, win the prize.',
-          'Although, he worked hard he did not win the prize.'
-        ],
-        correctOption: 0,
-        markingGuide: 'A subordinate clause beginning with "Although" followed by a comma before the main clause is correct.',
-        points: 1
-      }
-    ]
-  },
-  {
-    id: 'pp-bece-2023-soc',
-    examType: 'BECE',
-    year: 2023,
-    subject: 'Social Studies',
-    paperCode: 'WAEC-BECE-2023-SOC-1&2',
-    paperTitle: 'BECE 2023 Social Studies & Civic Education',
-    paperType: 'Combined',
-    durationMinutes: 100,
-    totalMarks: 100,
-    instructions: 'Answer all 50 objective questions and three questions from Section B.',
-    questionsCount: 53,
-    downloadFileName: 'BECE_2023_Social_Studies.txt',
-    fileSize: '172 KB',
-    uploadedBy: 'WAEC Bo Office',
-    uploadedAt: '2026-06-12',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-bece-so-1',
-        number: 1,
-        question: 'Which of the following is the primary legislative body of Sierra Leone responsible for making national laws?',
-        options: ['The Judiciary', 'The Cabinet', 'The Parliament', 'The City Council'],
-        correctOption: 2,
-        markingGuide: 'Parliament is the legislative organ of government in Sierra Leone.',
-        points: 1
-      }
-    ]
-  },
-
-  // --- WASSCE (SSS 3) ---
-  {
-    id: 'pp-wassce-2024-coremath',
-    examType: 'WASSCE',
-    year: 2024,
-    subject: 'Mathematics (Core)',
-    paperCode: 'WAEC-WASSCE-2024-MATH-1&2',
-    paperTitle: 'WASSCE 2024 General Mathematics / Core Mathematics',
-    paperType: 'Combined',
-    durationMinutes: 150,
-    totalMarks: 100,
-    instructions: 'Paper 1: 50 Objective Questions (1 hour 30 mins). Paper 2: 13 Theory Questions (2 hours 30 mins). Answer all Section A and 5 questions from Section B.',
-    questionsCount: 63,
-    downloadFileName: 'WASSCE_2024_Core_Mathematics.txt',
-    fileSize: '265 KB',
-    uploadedBy: 'WAEC West African Council',
-    uploadedAt: '2026-07-02',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-wassce-cm-1',
-        number: 1,
-        question: 'If log₁₀ 2 = 0.3010 and log₁₀ 3 = 0.4771, calculate the value of log₁₀ 72 without using logarithm tables.',
-        options: ['1.8572', '1.7781', '1.6990', '1.9030'],
-        correctOption: 0,
-        markingGuide: '72 = 8 * 9 = 2³ * 3². log 72 = 3(log 2) + 2(log 3) = 3(0.3010) + 2(0.4771) = 0.9030 + 0.9542 = 1.8572.',
-        points: 2
-      },
-      {
-        id: 'q-wassce-cm-2',
-        number: 2,
-        question: 'Find the truth set of the inequality: (2x - 3) / 3 < (x + 1) / 2.',
-        options: ['x < 9', 'x > 9', 'x < -9', 'x > -9'],
-        correctOption: 0,
-        markingGuide: 'Multiply both sides by 6: 2(2x - 3) < 3(x + 1) => 4x - 6 < 3x + 3 => 4x - 3x < 3 + 6 => x < 9.',
-        points: 2
-      },
-      {
-        id: 'q-wassce-cm-3',
-        number: 3,
-        question: 'The third term of a Geometric Progression (G.P.) is 18 and the sixth term is 486. Find the first term (a) and common ratio (r).',
-        options: ['a = 2, r = 3', 'a = 3, r = 2', 'a = 2, r = 4', 'a = 1, r = 3'],
-        correctOption: 0,
-        markingGuide: 'T₃ = ar² = 18; T₆ = ar⁵ = 486. Dividing gives r³ = 486 / 18 = 27 => r = 3. ar² = a(9) = 18 => a = 2.',
-        points: 3
-      }
-    ]
-  },
-  {
-    id: 'pp-wassce-2024-eng',
-    examType: 'WASSCE',
-    year: 2024,
-    subject: 'English Language',
-    paperCode: 'WAEC-WASSCE-2024-ENG-1&2',
-    paperTitle: 'WASSCE 2024 English Language (Essay, Comprehension & Lexis/Structure)',
-    paperType: 'Combined',
-    durationMinutes: 180,
-    totalMarks: 100,
-    instructions: 'Section A: Continuous Writing (50 marks). Section B: Reading Comprehension (20 marks). Section C: Summary (30 marks). Paper 1: Objective Test (80 items).',
-    questionsCount: 84,
-    downloadFileName: 'WASSCE_2024_English_Language.txt',
-    fileSize: '290 KB',
-    uploadedBy: 'WAEC West African Council',
-    uploadedAt: '2026-07-04',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-wassce-e-1',
-        number: 1,
-        question: 'From the words lettered A to D, choose the word that is opposite in meaning (antonym) to "STRINGENT".',
-        options: ['Lenient', 'Rigid', 'Severe', 'Stern'],
-        correctOption: 0,
-        markingGuide: 'Stringent means strict and precise; its antonym is lenient.',
-        points: 1
-      }
-    ]
-  },
-  {
-    id: 'pp-wassce-2023-bio',
-    examType: 'WASSCE',
-    year: 2023,
-    subject: 'Biology',
-    paperCode: 'WAEC-WASSCE-2023-BIO-1&2',
-    paperTitle: 'WASSCE 2023 Biology (Paper 1 Objectives & Paper 2 Essay)',
-    paperType: 'Combined',
-    durationMinutes: 150,
-    totalMarks: 100,
-    instructions: 'Paper 1: 50 Multiple Choice Questions (50 marks). Paper 2: Answer 4 questions from Section A and 1 question from Section B.',
-    questionsCount: 56,
-    downloadFileName: 'WASSCE_2023_Biology.txt',
-    fileSize: '240 KB',
-    uploadedBy: 'WAEC Sierra Leone',
-    uploadedAt: '2026-07-10',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-wassce-b-1',
-        number: 1,
-        question: 'In human circulatory physiology, which blood vessel carries oxygenated blood from the lungs directly to the left atrium of the heart?',
-        options: ['Pulmonary artery', 'Pulmonary vein', 'Vena cava', 'Hepatic artery'],
-        correctOption: 1,
-        markingGuide: 'The pulmonary vein is the only vein carrying oxygenated blood from the lungs to the left atrium of the heart.',
-        points: 1
-      },
-      {
-        id: 'q-wassce-b-2',
-        number: 2,
-        question: 'A cross between two heterozygous tall pea plants (Tt x Tt) yields what expected phenotypic ratio in the F1 generation?',
-        options: ['3 Tall : 1 Dwarf', '1 Tall : 1 Dwarf', '2 Tall : 2 Dwarf', 'All Tall'],
-        correctOption: 0,
-        markingGuide: 'Genotypes: 1 TT, 2 Tt, 1 tt. Phenotype: 3 Tall and 1 Dwarf.',
-        points: 2
-      }
-    ]
-  },
-  {
-    id: 'pp-wassce-2024-chem',
-    examType: 'WASSCE',
-    year: 2024,
-    subject: 'Chemistry',
-    paperCode: 'WAEC-WASSCE-2024-CHEM-1&2',
-    paperTitle: 'WASSCE 2024 Chemistry (Theory & Objectives)',
-    paperType: 'Combined',
-    durationMinutes: 150,
-    totalMarks: 100,
-    instructions: 'Periodic table provided on inside back cover. Calculators permitted. Answer all Section A and three from Section B.',
-    questionsCount: 58,
-    downloadFileName: 'WASSCE_2024_Chemistry.txt',
-    fileSize: '255 KB',
-    uploadedBy: 'WAEC West African Council',
-    uploadedAt: '2026-07-15',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-wassce-c-1',
-        number: 1,
-        question: 'What mass of anhydrous sodium carbonate (Na₂CO₃) is required to prepare 500 cm³ of a 0.2 mol/dm³ standard solution? [Na = 23, C = 12, O = 16]',
-        options: ['10.6 g', '5.3 g', '21.2 g', '1.06 g'],
-        correctOption: 0,
-        markingGuide: 'Molar mass of Na₂CO₃ = (23*2) + 12 + (16*3) = 46 + 12 + 48 = 106 g/mol. Moles = 0.2 * (500/1000) = 0.1 mol. Mass = 0.1 * 106 = 10.6 g.',
-        points: 2
-      }
-    ]
-  },
-  {
-    id: 'pp-wassce-2023-econ',
-    examType: 'WASSCE',
-    year: 2023,
-    subject: 'Economics',
-    paperCode: 'WAEC-WASSCE-2023-ECON-1&2',
-    paperTitle: 'WASSCE 2023 Economics (Microeconomics & Macroeconomics)',
-    paperType: 'Combined',
-    durationMinutes: 150,
-    totalMarks: 100,
-    instructions: 'Section A: Data response question (compulsory). Section B: Answer any three questions on West African economic systems.',
-    questionsCount: 58,
-    downloadFileName: 'WASSCE_2023_Economics.txt',
-    fileSize: '215 KB',
-    uploadedBy: 'WAEC Sierra Leone',
-    uploadedAt: '2026-07-18',
-    hasMarkingScheme: true,
-    sampleQuestions: [
-      {
-        id: 'q-wassce-ec-1',
-        number: 1,
-        question: 'When a percentage change in quantity demanded is exactly equal to the percentage change in price, elasticity of demand is described as:',
-        options: ['Perfect elastic', 'Inelastic', 'Unitary elastic', 'Perfect inelastic'],
-        correctOption: 2,
-        markingGuide: 'Unitary elasticity occurs when percentage change in quantity demanded divided by percentage change in price equals 1.',
-        points: 1
-      }
-    ]
-  }
-];
+// Initial Clean Past Papers Archive (NPSE, BECE, WASSCE) - Zero Predefined or Mock Records
+export const INITIAL_PAST_PAPERS: PastPaper[] = [];
 
 export default function PastPapersModule({ onNavigate }: PastPapersModuleProps) {
   const { user, role } = useAuth();
@@ -545,20 +79,25 @@ export default function PastPapersModule({ onNavigate }: PastPapersModuleProps) 
   const [newTotalMarks, setNewTotalMarks] = useState(100);
   const [newInstructions, setNewInstructions] = useState('');
 
-  // Real-time synchronization for past papers
+  // Real-time synchronization for past papers (strictly zero mock records)
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sma_past_papers');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.some((p: any) => p && typeof p.id === 'string' && (p.id.includes('npse-2024') || p.id.includes('bece-2024') || p.id.includes('wassce-2024')))) {
+          localStorage.setItem('sma_past_papers', JSON.stringify([]));
+        }
+      }
+    } catch {}
+
     const unsub = syncFirestoreCollection<PastPaper>(
       'past_papers',
       'sma_past_papers',
       (items) => {
-        if (items && items.length > 0) {
-          setPastPapers(items);
-        } else {
-          setPastPapers(INITIAL_PAST_PAPERS);
-          localStorage.setItem('sma_past_papers', JSON.stringify(INITIAL_PAST_PAPERS));
-        }
+        setPastPapers(items || []);
       },
-      INITIAL_PAST_PAPERS
+      []
     );
 
     return () => unsub();
@@ -802,6 +341,30 @@ EXAMINER MARKING SCHEME & STEP-BY-STEP MODEL SOLUTIONS:
         </div>
       )}
 
+      {/* Top Navigation Bar with Back Button */}
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (onNavigate) {
+              onNavigate('dashboard');
+            } else if (typeof window !== 'undefined' && window.history.length > 1) {
+              window.history.back();
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-teal-500/50 transition-all shadow-xs cursor-pointer group"
+          id="past-papers-back-btn"
+        >
+          <ArrowLeft className="w-4 h-4 text-teal-600 dark:text-teal-400 group-hover:-translate-x-0.5 transition-transform" />
+          <span>← Back to Previous Page / Dashboard</span>
+        </button>
+
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <GraduationCap className="w-4 h-4 text-teal-600" />
+          <span>{SCHOOL_INFO.name} • WAEC / MBSSE National Examination Portal</span>
+        </div>
+      </div>
+
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-800">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -1043,28 +606,62 @@ EXAMINER MARKING SCHEME & STEP-BY-STEP MODEL SOLUTIONS:
         </div>
 
         {filteredPapers.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-10 sm:p-14 text-center space-y-4">
             <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 flex items-center justify-center">
               <FileCheck className="w-8 h-8" />
             </div>
-            <div>
-              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-base">No Past Papers Match Your Search</h4>
-              <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-                There are no past papers matching the selected examination tier, subject, or keyword. Try resetting your search filters.
+            <div className="space-y-1">
+              <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg">
+                {pastPapers.length === 0 ? 'Zero Mock Records • Archive Ready for Live Examination Papers' : 'No Past Papers Match Your Search'}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+                {pastPapers.length === 0 
+                  ? 'All predefined and mock records have been removed. Educators and administrators can upload genuine NPASE/NPSE, BECE, and WASSCE past papers, marking schemes, and question banks directly to the Bo archive.'
+                  : 'There are no past papers matching the selected examination tier, subject, or keyword. Try resetting your search filters or clear your search term.'}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedExamType('All');
-                setSelectedYear('All');
-                setSelectedSubject('All');
-                setSearchQuery('');
-              }}
-              className="py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              Reset All Filters
-            </button>
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate('dashboard');
+                  } else if (typeof window !== 'undefined' && window.history.length > 1) {
+                    window.history.back();
+                  }
+                }}
+                className="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Dashboard</span>
+              </button>
+
+              {(role === 'admin' || role === 'teacher') && (
+                <button
+                  type="button"
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 shadow-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Upload Official Past Paper</span>
+                </button>
+              )}
+
+              {pastPapers.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedExamType('All');
+                    setSelectedYear('All');
+                    setSelectedSubject('All');
+                    setSearchQuery('');
+                  }}
+                  className="py-2.5 px-4 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Reset All Filters
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1192,13 +789,24 @@ EXAMINER MARKING SCHEME & STEP-BY-STEP MODEL SOLUTIONS:
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setActivePaperForPractice(null)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActivePaperForPractice(null)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Papers</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActivePaperForPractice(null)}
+                  className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  title="Close Modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Test Content */}
